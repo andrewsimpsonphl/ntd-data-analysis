@@ -15,7 +15,7 @@ nyc_name <- "MTA New York City Transit"
 
 # DOWNLOAD NTD MOST RECENT FILE
 url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/September%202019%20Adjusted%20Database.xlsx"
-file <- download.file(url, "ntd_file")
+file <- download.file(url, "./inputs/ntd_file")
 ntd_data <- read_excel("ntd_file", sheet = 3)
 
 #### UPT ANALYSIS ########
