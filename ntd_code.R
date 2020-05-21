@@ -16,7 +16,7 @@ nyc_name <- "MTA New York City Transit"
 # DOWNLOAD NTD MOST RECENT FILE
 url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/September%202019%20Adjusted%20Database.xlsx"
 file <- download.file(url, "./inputs/ntd_file")
-ntd_data <- read_excel("ntd_file", sheet = 3)
+ntd_data <- read_excel("./inputs/ntd_file", sheet = 3)
 
 #### UPT ANALYSIS ########
 # TIDY UP NTD DATA
@@ -269,4 +269,51 @@ plot_agency_speed <- function(clean_ntd_metric_dat, mode, minimum_UPT, maximum_U
 }
 
 plot_agency_speed(clean_ntd_metric_dat, "Bus", 50000000)
+
+
+
+
+
+#### CALCULATING FARE RECOVERY RATIO FOR 2018 ####
+#### DP to look into writing a function
+## load the "MASTER" (sheet 2)
+ntd_data_18frr <- read_excel("./inputs/ntd_file", sheet = 2)
+
+## create individual agency dataframes and calculate the FRR 
+
+### SEPTA
+septa_frr <- ntd_data_18frr %>%
+  filter(Agency == "Southeastern Pennsylvania Transportation Authority")
+
+sum(septa_frr$`Fares FY`, na.rm = TRUE)/sum(septa_frr$`Operating Expenses FY`, na.rm = TRUE)
+
+### WMATA
+wmata_frr <- ntd_data_18frr %>%
+  filter(Agency == "Washington Metropolitan Area Transit Authority")
+sum(wmata_frr$`Fares FY`, na.rm = TRUE)/sum(wmata_frr$`Operating Expenses FY`, na.rm = TRUE)
+
+### CTA
+cta_frr <- ntd_data_18frr %>%
+  filter(Agency == "Chicago Transit Authority")
+sum(cta_frr$`Fares FY`, na.rm = TRUE)/sum(cta_frr$`Operating Expenses FY`, na.rm = TRUE)
+
+### MBTA
+mbta_frr <- ntd_data_18frr %>%
+  filter(Agency == "Massachusetts Bay Transportation Authority")
+sum(mbta_frr$`Fares FY`, na.rm = TRUE)/sum(mbta_frr$`Operating Expenses FY`, na.rm = TRUE)
+
+### LA METRO
+lametro_frr <- ntd_data_18frr %>%
+  filter(Agency == "Los Angeles County Metropolitan Transportation Authority dba: Metro")
+sum(lametro_frr$`Fares FY`, na.rm = TRUE)/sum(lametro_frr$`Operating Expenses FY`, na.rm = TRUE)
+
+### SFMTA
+sfmta_frr <- ntd_data_18frr %>%
+  filter(Agency == "San Francisco Municipal Railway")
+sum(sfmta_frr$`Fares FY`, na.rm = TRUE)/sum(sfmta_frr$`Operating Expenses FY`, na.rm = TRUE)
+
+### King County
+kcmetro_frr <- ntd_data_18frr %>%
+  filter(Agency == "King County Department of Transportation - Metro Transit Division")
+sum(kcmetro_frr$`Fares FY`, na.rm = TRUE)/sum(kcmetro_frr$`Operating Expenses FY`, na.rm = TRUE)
 
