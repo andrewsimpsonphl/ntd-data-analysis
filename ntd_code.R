@@ -6,6 +6,7 @@ library(ggplot2)
 library(lubridate)
 library(directlabels)
 library(readxl)
+library(rphl)
 
 peer_codes <- c(90154, 50066, 30030, 30019, 10003, 30034, 1) #WMATA, MBTA, SEPTA, Batltimore, Seattle, CTA
 peer_uzas <- c(1:10) #10 largest UZAs excluding NYC
@@ -13,10 +14,30 @@ septa_name <- "Southeastern Pennsylvania Transportation Authority"
 nyc_name <- "MTA New York City Transit"
 
 
-# DOWNLOAD NTD MOST RECENT FILE
-url1 <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/September%202019%20Adjusted%20Database.xlsx"
-ntd_monthly_upt <- download.file(url1, "./inputs/ntd_monthly_upt_file")
+#### DOWNLOAD NTD MOST RECENT FILES -------------------------------------------------------------------####
+#TO DO: MAKE THIS A SINGLE FUNCTION
+
+# Download Monthly Unlinked Passenger Trips 
+url_monthly_upt <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/September%202019%20Adjusted%20Database.xlsx"
+ntd_monthly_upt <- download.file(url_monthly_upt, "./inputs/ntd_monthly_upt_file")
+
+##Download "TS2.1 - Service Data and Operating Expenses Time-Series by Mode" from FTA website
+url_TS2_1 <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/TS2.1TimeSeriesOpExpSvcModeTOS_2.xlsx"
+yearly_upt_file <- download.file(url_TS2_1, "./inputs/ntd_yearly_upt_file")
+
+#Download NTD Metrics data
+metrics_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
+metrics_file <- download.file(metrics_url, "./inputs/ntd_metric_file")
+
+
+#### READ DATA INTO ENVIRONMENT-----------------------------------------------------------------------####
+# TODO: describe each one of these
 ntd_monthly_data <- read_excel("./inputs/ntd_monthly_upt_file", sheet = 3)
+ntd_metric_data <- read_excel("ntd_metric_file", sheet = 3)
+ntd_data_18frr <- read_excel("./inputs/ntd_file", sheet = 2)
+ntd_yearly_OpExp_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 3)
+ntd_yearly_Fares_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 8)
+
 
 #### UPT ANALYSIS ########
 # TIDY UP NTD DATA
@@ -218,10 +239,6 @@ plot_uza_yearly_ridership_indexed(clean_ntd_monthly, list_uzas, 2008, 2018)
 
 #### NATIONAL SPEED ANALYSIS ####
 
-url2 <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
-file2 <- download.file(url2, "ntd_metric_file")
-ntd_metric_data <- read_excel("ntd_metric_file", sheet = 3)
-
 clean_metric_data <- function(metric_data) {
   output <- metric_data %>%
     filter(`Reporter Type` == "Full Reporter") %>%
@@ -277,62 +294,18 @@ plot_agency_speed(clean_ntd_metric_dat, "Bus", 50000000)
 #### CALCULATING FARE RECOVERY RATIO FOR 2018 ####
 #### DP to look into writing a function
 ## load the "MASTER" (sheet 2)
-ntd_data_18frr <- read_excel("./inputs/ntd_file", sheet = 2)
 
 ## create individual agency dataframes and calculate the FRR 
 
-### SEPTA
-septa_frr <- ntd_data_18frr %>%
-  filter(Agency == "Southeastern Pennsylvania Transportation Authority")
+# FUNCTION: clean_ntd_yearly_data
+# Paramaters: 
+# OpExp_file = ntd operating expenses by year for each agency and mode
+# Fares_files = ntd fare revenue by year for each agency and mode
+# Year1/Year2 = (inclusive) filter of years to return
+# returns a clean dataframe of yearly NTD data - currenlty just operating expensis and fare revenue
 
-sum(septa_frr$`Fares FY`, na.rm = TRUE)/sum(septa_frr$`Operating Expenses FY`, na.rm = TRUE)
-
-### WMATA
-wmata_frr <- ntd_data_18frr %>%
-  filter(Agency == "Washington Metropolitan Area Transit Authority")
-sum(wmata_frr$`Fares FY`, na.rm = TRUE)/sum(wmata_frr$`Operating Expenses FY`, na.rm = TRUE)
-
-### CTA
-cta_frr <- ntd_data_18frr %>%
-  filter(Agency == "Chicago Transit Authority")
-sum(cta_frr$`Fares FY`, na.rm = TRUE)/sum(cta_frr$`Operating Expenses FY`, na.rm = TRUE)
-
-### MBTA
-mbta_frr <- ntd_data_18frr %>%
-  filter(Agency == "Massachusetts Bay Transportation Authority")
-sum(mbta_frr$`Fares FY`, na.rm = TRUE)/sum(mbta_frr$`Operating Expenses FY`, na.rm = TRUE)
-
-### LA METRO
-lametro_frr <- ntd_data_18frr %>%
-  filter(Agency == "Los Angeles County Metropolitan Transportation Authority dba: Metro")
-sum(lametro_frr$`Fares FY`, na.rm = TRUE)/sum(lametro_frr$`Operating Expenses FY`, na.rm = TRUE)
-
-### SFMTA
-sfmta_frr <- ntd_data_18frr %>%
-  filter(Agency == "San Francisco Municipal Railway")
-sum(sfmta_frr$`Fares FY`, na.rm = TRUE)/sum(sfmta_frr$`Operating Expenses FY`, na.rm = TRUE)
-
-### King County
-kcmetro_frr <- ntd_data_18frr %>%
-  filter(Agency == "King County Department of Transportation - Metro Transit Division")
-sum(kcmetro_frr$`Fares FY`, na.rm = TRUE)/sum(kcmetro_frr$`Operating Expenses FY`, na.rm = TRUE)
-
-
-
-
-
-##Load "TS2.1 - Service Data and Operating Expenses Time-Series by Mode" from FTA website
-url2 <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/TS2.1TimeSeriesOpExpSvcModeTOS_2.xlsx"
-yearly_upt_file <- download.file(url2, "./inputs/ntd_yearly_upt_file")
-ntd_yearly_OpExp_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 3)
-ntd_yearly_Fares_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 8)
-#Remove "Last Reporyted Year" column
-ntd_yearly_OpExp_data$`Last Report Year`= NULL
-ntd_yearly_Fares_data$`Last Report Year`= NULL
-
-#gathering data
-clean_ntd_yearly_data <- function(OpExp_file) {
-  hold <- OpExp_file %>%
+clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Year1 = 2002, Year2 = 2018) {
+  yearly_opex <- OpExp_file %>%
     mutate(Mode=recode(Mode, 
                         "MB" = "Bus", 
                         "CR" = "Commuter Rail", 
@@ -349,23 +322,11 @@ clean_ntd_yearly_data <- function(OpExp_file) {
                         "FB" = "Ferry Bus")) %>%
     select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2018`)) %>%
     group_by(Mode) %>%
-    gather(key = "Year", value = "OP Expense", c(`1991`:`2018`), convert = TRUE)
+    gather(key = "Year", value = "operating_expense", c(`1991`:`2018`), convert = TRUE) %>% 
+    mutate(Year = parse_date_time(Year, orders = "y")) %>% 
+    separate("Year", c("Year"))
   
-  hold$Year <- parse_date_time(hold$Year, orders = "y")
-  hold <- separate(hold, "Year", c("Year"))
-  
-  output <- hold %>%
-    filter(is.na(`Agency Name`) == FALSE) 
-}
-
-##create a dataframe
-clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_data)
-
-
-
-#create a new dataframe for yearly fare revenue
-clean_ntd_yearly_data_2 <- function(Fares_file) {
-  hold <- Fares_file %>%
+  yearly_fare_revenue <- Fares_file %>% 
     mutate(Mode=recode(Mode, 
                        "MB" = "Bus", 
                        "CR" = "Commuter Rail", 
@@ -382,13 +343,36 @@ clean_ntd_yearly_data_2 <- function(Fares_file) {
                        "FB" = "Ferry Bus")) %>%
     select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2018`)) %>%
     group_by(Mode) %>%
-    gather(key = "Year", value = "Fares", c(`1991`:`2018`), convert = TRUE)
+    gather(key = "Year", value = "fare_revenue", c(`1991`:`2018`), convert = TRUE) %>% 
+    mutate(Year = parse_date_time(Year, orders = "y")) %>% 
+    separate
   
-  hold$Year <- parse_date_time(hold$Year, orders = "y")
-  hold <- separate(hold, "Year", c("Year"))
+  # TODO - ADD ANOTHER DATA FRAME OF YEARLY UPT THAT YOU JOIN TO THE OTHER DATA
+    
   
-  output <- hold %>%
-    filter(is.na(`Agency Name`) == FALSE) 
+  output <- yearly_opex %>%
+    full_join(yearly_fare_revenue) %>% 
+    mutate(recovery_ratio = fare_revenue / operating_expense ) %>% 
+    filter(is.na(`Agency Name`) == FALSE) %>% 
+    filter(!is.na(operating_expense) & operating_expense > 0) %>% 
+    filter(Year >= Year1 & Year <= Year2)
+
+  return(output)
 }
 
-clean_ntd_yearly_2 <- clean_ntd_yearly_data_2(ntd_yearly_data)
+##create a dataframe
+clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_OpExp_data, ntd_yearly_Fares_data, Year1 = 2002, Year2 = 2018)
+
+# PLOT RECOVERY RATIO FOR SEPTA REGIONAL RAIL (LINE CHART)
+septa_yearly_fare_recovery <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Commuter Rail") %>% 
+  select(-c(operating_expense, fare_revenue)) %>% 
+  group_by(Year)
+
+rail_recovery_yearly <- ggplot(septa_yearly_fare_recovery , aes(x = `Year`, y = `recovery_ratio`, group = 1)) +
+  geom_line() + 
+  ylab("Regional Rail Recovery Ratio") +
+  theme_phl()
+  
+rail_recovery_yearly
+
+# TO DO: YEARLY RIDERSHIP CHART  - SEE COMMENT ABOVE ABOUT GETTING THE YEARLY UPT INTO THE SAME DATASET
