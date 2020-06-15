@@ -14,13 +14,13 @@ nyc_name <- "MTA New York City Transit"
 
 
 # DOWNLOAD NTD MOST RECENT FILE
-url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/September%202019%20Adjusted%20Database.xlsx"
-file <- download.file(url, "./inputs/ntd_file")
-ntd_data <- read_excel("./inputs/ntd_file", sheet = 3)
+url1 <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/September%202019%20Adjusted%20Database.xlsx"
+ntd_monthly_upt <- download.file(url1, "./inputs/ntd_monthly_upt_file")
+ntd_monthly_data <- read_excel("./inputs/ntd_monthly_upt_file", sheet = 3)
 
 #### UPT ANALYSIS ########
 # TIDY UP NTD DATA
-clean_ntd_data <- function(data_file) {
+clean_ntd_monthly_data <- function(data_file) {
   hold <- data_file %>%
     mutate(Modes=recode(Modes, "MB" = "Bus", "CR" = "Commuter Rail", "HR" = "Heavy Rail", 
                         "LR" = "Trolley", "SR" = "Trolley", "CB" = "Commuter Bus", 
@@ -37,7 +37,7 @@ clean_ntd_data <- function(data_file) {
     filter(is.na(Agency) == FALSE)
 }
 
-clean_ntd <- clean_ntd_data(ntd_data)
+clean_ntd <- clean_ntd_monthly_data(ntd_monthly_data)
 
   
 septa <- clean_ntd %>%
@@ -120,7 +120,7 @@ plot_agency_mode_yearly <- function(data, agency, mode, year1, year2) {
 }
 plot_agency_mode_yearly(clean_ntd, septa_name, "Bus", 2002, 2018)
 plot_agency_mode_yearly(clean_ntd, septa_name, "Heavy Rail", 2002, 2018)
-plot_agency_mode_yearly(clean_ntd, septa_name, "Commuter Rail", 2002, 2018)
+plot_agency_mode_yearly(clean_ntd, septa_name, "Commuter Rail", 2002, 2019)
 plot_agency_mode_yearly(clean_ntd, septa_name, "Streetcar Rail", 2012, 2018)
 
 plot_agency_stackedmodes_yearly <- function(data, agency, year1, year2) {
@@ -316,4 +316,34 @@ sum(sfmta_frr$`Fares FY`, na.rm = TRUE)/sum(sfmta_frr$`Operating Expenses FY`, n
 kcmetro_frr <- ntd_data_18frr %>%
   filter(Agency == "King County Department of Transportation - Metro Transit Division")
 sum(kcmetro_frr$`Fares FY`, na.rm = TRUE)/sum(kcmetro_frr$`Operating Expenses FY`, na.rm = TRUE)
+
+
+##Load "TS2.1 - Service Data and Operating Expenses Time-Series by Mode" from FTA website
+url2 <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/TS2.1TimeSeriesOpExpSvcModeTOS_2.xlsx"
+yearly_upt_file <- download.file(url2, "./inputs/ntd_yearly_upt_file")
+ntd_yearly_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 3)
+
+#Remove "Last Reporyted Year" column
+
+
+#gathering data
+clean_ntd_yearly_data <- function(data_file) {
+  hold <- data_file %>%
+    mutate(Modes=recode(Mode, "MB" = "Bus", "CR" = "Commuter Rail", "HR" = "Heavy Rail", 
+                        "LR" = "Trolley", "SR" = "Trolley", "CB" = "Commuter Bus", 
+                        "DR" = "Demand Response", "TB" = "Bus", "RB" = "Bus Rapid Transit", 
+                        "IP" = "Incline Plane", "DT" = "Demand Response Taxi", "VP" = "Vanpool", 
+                        "FB" = "Ferry Bus")) %>%
+    group_by(Modes) %>%
+    gather(key = "Year", value = "OP Expense", c(-"Agency Name", -'NTD ID',-'Legacy NTD ID', -Modes, -"Agency Status", -`Reporter Type`, -UZA, -`UZA Name`, -Service), convert = TRUE)
+  
+  hold$Year <- parse_date_time(hold$year, orders = "my")
+  hold <- separate(hold, "Year", c("Year"))
+  
+  output <- hold %>%
+    filter(is.na(Agency) == FALSE)
+}
+
+clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_data)
+
 
