@@ -27,17 +27,15 @@ yearly_upt_file <- download.file(url_TS2_1, "./inputs/ntd_yearly_upt_file")
 
 #Download NTD Metrics data
 metrics_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
-metrics_file <- download.file(metrics_url, "./inputs/ntd_metric_file")
+ntd_metric_file <- download.file(metrics_url, "./inputs/ntd_metric_file")
 
 
 #### READ DATA INTO ENVIRONMENT-----------------------------------------------------------------------####
-# TODO: describe each one of these
-ntd_monthly_data <- read_excel("./inputs/ntd_monthly_upt_file", sheet = 3)
-ntd_metric_data <- read_excel("ntd_metric_file", sheet = 3)
-ntd_data_18frr <- read_excel("./inputs/ntd_file", sheet = 2)
-ntd_yearly_OpExp_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 3)
-ntd_yearly_Fares_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 8)
-
+ntd_monthly_data <- read_excel("./inputs/ntd_monthly_upt_file", sheet = 3) #datasheet with monthly UPT for each agency and mode from Jan 2002 to Sept 2019
+ntd_metric_data <- read_excel("./inputs/ntd_metric_file", sheet = 3) #datasheet with metrics data by agencies - for national speed anlysis
+ntd_yearly_OpExp_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 3) #datasheet with yearly Operating Expenses for each agency and mode from 1991 to 2018
+ntd_yearly_Fares_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 8) #datasheet with yearly Fare Revenues for each agency and mode from  2002 to 2018
+ntd_yearly_ridership_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 13)
 
 #### UPT ANALYSIS ########
 # TIDY UP NTD DATA
@@ -64,7 +62,7 @@ clean_ntd_monthly <- clean_ntd_monthly_data(ntd_monthly_data)
 septa <- clean_ntd_monthly %>%
   filter(Agency == "Southeastern Pennsylvania Transportation Authority")
 
-# FUNCTIONAL CODE
+# FUNCTIONAL CODES
 
 find_yearly_ridership_by_AgencyMode <- function(data) {
   output <- data %>%
@@ -289,14 +287,6 @@ plot_agency_speed(clean_ntd_metric_dat, "Bus", 50000000)
 
 
 
-
-
-#### CALCULATING FARE RECOVERY RATIO FOR 2018 ####
-#### DP to look into writing a function
-## load the "MASTER" (sheet 2)
-
-## create individual agency dataframes and calculate the FRR 
-
 # FUNCTION: clean_ntd_yearly_data
 # Paramaters: 
 # OpExp_file = ntd operating expenses by year for each agency and mode
@@ -304,8 +294,9 @@ plot_agency_speed(clean_ntd_metric_dat, "Bus", 50000000)
 # Year1/Year2 = (inclusive) filter of years to return
 # returns a clean dataframe of yearly NTD data - currenlty just operating expensis and fare revenue
 
-clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Year1 = 2002, Year2 = 2018) {
-  yearly_opex <- OpExp_file %>%
+clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Ridership_file, Year1 = 1991, Year2 = 2018) {
+  #gather a dataframe to get yearly operating expense for each mode of all agencies
+  yearly_operating_expense <- OpExp_file %>%
     mutate(Mode=recode(Mode, 
                         "MB" = "Bus", 
                         "CR" = "Commuter Rail", 
@@ -324,8 +315,9 @@ clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Year1 = 2002, Year2 = 
     group_by(Mode) %>%
     gather(key = "Year", value = "operating_expense", c(`1991`:`2018`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
-    separate("Year", c("Year"))
+    separate("Year", c("Year")) 
   
+  #gather a dataframe to get yearly fare revenue for each mode of all agencies
   yearly_fare_revenue <- Fares_file %>% 
     mutate(Mode=recode(Mode, 
                        "MB" = "Bus", 
@@ -345,13 +337,34 @@ clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Year1 = 2002, Year2 = 
     group_by(Mode) %>%
     gather(key = "Year", value = "fare_revenue", c(`1991`:`2018`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
-    separate
-  
-  # TODO - ADD ANOTHER DATA FRAME OF YEARLY UPT THAT YOU JOIN TO THE OTHER DATA
+    separate("Year", c("Year"))
     
+  #gather a dataframe to get yearly ridership for each mode of all agencies
+  yearly_ridership <- Ridership_file %>%
+    mutate(Mode=recode(Mode, 
+                       "MB" = "Bus", 
+                       "CR" = "Commuter Rail", 
+                       "HR" = "Heavy Rail", 
+                       "LR" = "Trolley", 
+                       "SR" = "Trolley",
+                       "CB" = "Commuter Bus", 
+                       "DR" = "Demand Response", 
+                       "TB" = "Bus", 
+                       "RB" = "Bus Rapid Transit", 
+                       "IP" = "Incline Plane", 
+                       "DT" = "Demand Response Taxi", 
+                       "VP" = "Vanpool", 
+                       "FB" = "Ferry Bus")) %>%
+    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2018`)) %>%
+    group_by(Mode) %>%
+    gather(key = "Year", value = "yearly_ridership", c(`1991`:`2018`), convert = TRUE) %>% 
+    mutate(Year = parse_date_time(Year, orders = "y")) %>% 
+    separate("Year", c("Year"))
   
-  output <- yearly_opex %>%
-    full_join(yearly_fare_revenue) %>% 
+  
+  output <- yearly_operating_expense %>%
+    full_join(yearly_fare_revenue) %>%
+    full_join(yearly_ridership) %>%
     mutate(recovery_ratio = fare_revenue / operating_expense ) %>% 
     filter(is.na(`Agency Name`) == FALSE) %>% 
     filter(!is.na(operating_expense) & operating_expense > 0) %>% 
@@ -361,11 +374,11 @@ clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Year1 = 2002, Year2 = 
 }
 
 ##create a dataframe
-clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_OpExp_data, ntd_yearly_Fares_data, Year1 = 2002, Year2 = 2018)
+clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_OpExp_data, ntd_yearly_Fares_data, ntd_yearly_ridership_data, Year1 = 2002, Year2 = 2018)
 
 # PLOT RECOVERY RATIO FOR SEPTA REGIONAL RAIL (LINE CHART)
 septa_yearly_fare_recovery <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Commuter Rail") %>% 
-  select(-c(operating_expense, fare_revenue)) %>% 
+  select(-c(operating_expense, fare_revenue, yearly_ridership)) %>% 
   group_by(Year)
 
 rail_recovery_yearly <- ggplot(septa_yearly_fare_recovery , aes(x = `Year`, y = `recovery_ratio`, group = 1)) +
@@ -375,4 +388,31 @@ rail_recovery_yearly <- ggplot(septa_yearly_fare_recovery , aes(x = `Year`, y = 
   
 rail_recovery_yearly
 
-# TO DO: YEARLY RIDERSHIP CHART  - SEE COMMENT ABOVE ABOUT GETTING THE YEARLY UPT INTO THE SAME DATASET
+
+# PLOT YEARLY RIDERSHIP FOR SEPTA REGIONAL RAIL (LINE CHART)
+septa_yearly_ridership <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Commuter Rail") %>% 
+  select(-c(operating_expense, fare_revenue, recovery_ratio)) %>% 
+  group_by(Year)
+
+rail_ridership_yearly <- ggplot(septa_yearly_ridership , aes(x = `Year`, y = `yearly_ridership`, group = 1)) +
+  geom_line() + 
+  ylab("Regional Rail Yearly Ridership") +
+  theme_phl()
+
+rail_ridership_yearly
+
+# IN PROGRESS: combine the twoplots into one graph with shared x-axis
+library(gtable)
+library(grid) # low-level grid functions are required
+g1 <- ggplotGrob(rail_recovery_yearly)
+g1 <- gtable_add_cols(g1, unit(0,"mm")) # add a column for missing legend
+g2 <- ggplotGrob(rail_ridership_yearly)
+g <- rbind(g1, g2, size="first") # stack the two plots
+g$widths <- unit.pmax(g1$widths, g2$widths) # use the largest widths
+# center the legend vertically
+g$layout[grepl("guide", g$layout$name),c("t","b")] <- c(1,nrow(g))
+grid.newpage()
+grid.draw(g)
+
+
+
