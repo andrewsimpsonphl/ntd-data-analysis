@@ -7,6 +7,8 @@ library(lubridate)
 library(directlabels)
 library(readxl)
 library(rphl)
+library(scales)
+
 
 peer_codes <- c(90154, 50066, 30030, 30019, 10003, 30034, 1) #WMATA, MBTA, SEPTA, Batltimore, Seattle, CTA
 peer_uzas <- c(1:10) #10 largest UZAs excluding NYC
@@ -377,16 +379,20 @@ clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Ridership_file, Year1 
 clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_OpExp_data, ntd_yearly_Fares_data, ntd_yearly_ridership_data, Year1 = 2002, Year2 = 2018)
 
 # PLOT RECOVERY RATIO FOR SEPTA REGIONAL RAIL (LINE CHART)
+
 septa_yearly_fare_recovery <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Commuter Rail") %>% 
   select(-c(operating_expense, fare_revenue, yearly_ridership)) %>% 
   group_by(Year)
 
+septa_yearly_fare_recovery$recovery_ratio <- septa_yearly_fare_recovery$recovery_ratio*100 #Making the recovery ratio from decimal to %
+
 rail_recovery_yearly <- ggplot(septa_yearly_fare_recovery , aes(x = `Year`, y = `recovery_ratio`, group = 1)) +
   geom_line() + 
-  ylab("Regional Rail Recovery Ratio") +
+  ylab("Regional Rail Recovery Ratio (%)") +
+  labs(title = paste("SEPTA Regional Rail Fare Recovery Ratio from 2002 - 2018")) +
   theme_phl()
   
-rail_recovery_yearly
+rail_recovery_yearly 
 
 
 # PLOT YEARLY RIDERSHIP FOR SEPTA REGIONAL RAIL (LINE CHART)
@@ -397,22 +403,25 @@ septa_yearly_ridership <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% fil
 rail_ridership_yearly <- ggplot(septa_yearly_ridership , aes(x = `Year`, y = `yearly_ridership`, group = 1)) +
   geom_line() + 
   ylab("Regional Rail Yearly Ridership") +
+  labs(title = paste("SEPTA Regional Rail Yearly Ridership from 2002 - 2018")) +
   theme_phl()
 
-rail_ridership_yearly
+rail_ridership_yearly +
+  scale_y_continuous(labels = comma) #adding commas to the numbers on y axis
 
-# IN PROGRESS: combine the twoplots into one graph with shared x-axis
-library(gtable)
-library(grid) # low-level grid functions are required
-g1 <- ggplotGrob(rail_recovery_yearly)
-g1 <- gtable_add_cols(g1, unit(0,"mm")) # add a column for missing legend
-g2 <- ggplotGrob(rail_ridership_yearly)
-g <- rbind(g1, g2, size="first") # stack the two plots
-g$widths <- unit.pmax(g1$widths, g2$widths) # use the largest widths
+# IN PROGRESS: combine the two plots into one graph with shared x-axis
+
+####### tehfolowing codes are not final
+#library(gtable)
+#library(grid) # low-level grid functions are required
+#g1 <- ggplotGrob(rail_recovery_yearly)
+#g1 <- gtable_add_cols(g1, unit(0,"mm")) # add a column for missing legend
+#g2 <- ggplotGrob(rail_ridership_yearly)
+#g <- rbind(g1, g2, size="first") # stack the two plots
+#g$widths <- unit.pmax(g1$widths, g2$widths) # use the largest widths
 # center the legend vertically
-g$layout[grepl("guide", g$layout$name),c("t","b")] <- c(1,nrow(g))
-grid.newpage()
-grid.draw(g)
-
+#g$layout[grepl("guide", g$layout$name),c("t","b")] <- c(1,nrow(g))
+#grid.newpage()
+#grid.draw(g)
 
 
