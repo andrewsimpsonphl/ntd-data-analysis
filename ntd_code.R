@@ -380,48 +380,44 @@ clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_OpExp_data, ntd_yearly_Fare
 
 # PLOT RECOVERY RATIO FOR SEPTA REGIONAL RAIL (LINE CHART)
 
-septa_yearly_fare_recovery <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Commuter Rail") %>% 
-  select(-c(operating_expense, fare_revenue, yearly_ridership)) %>% 
+septa_yearly_fare_recovery <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Demand Response") %>% 
+  select(-c(operating_expense, fare_revenue, yearly_ridership)) %>%
+  #filter(is.na(`yearly_ridership`,`operating_expense`,`fare_revenue`) == FALSE) %>%
   group_by(Year)
 
 septa_yearly_fare_recovery$recovery_ratio <- septa_yearly_fare_recovery$recovery_ratio*100 #Making the recovery ratio from decimal to %
 
 rail_recovery_yearly <- ggplot(septa_yearly_fare_recovery , aes(x = `Year`, y = `recovery_ratio`, group = 1)) +
-  geom_line() + 
-  ylab("Regional Rail Recovery Ratio (%)") +
-  labs(title = paste("SEPTA Regional Rail Fare Recovery Ratio from 2002 - 2018")) +
+  geom_line(colour = "azure4") +
+  geom_point(size=2, colour = "blue4") +
+  ylim(0,20) + #adjust y-axis
+  ylab("Demand Response Recovery Ratio (%)") +
+  labs(title = paste("SEPTA Demand Response Fare Recovery Ratio from 2002 - 2018")) +
   theme_phl()
-  
+  #+ theme(axis.title.x = element_blank(), axis.text.x = element_blank()) #Enable this line if you want to get rid of the first axis lables when combining two graphs 
+
 rail_recovery_yearly 
-
-
+   
 # PLOT YEARLY RIDERSHIP FOR SEPTA REGIONAL RAIL (LINE CHART)
-septa_yearly_ridership <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Commuter Rail") %>% 
+septa_yearly_ridership <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Demand Response") %>% 
   select(-c(operating_expense, fare_revenue, recovery_ratio)) %>% 
   group_by(Year)
 
 rail_ridership_yearly <- ggplot(septa_yearly_ridership , aes(x = `Year`, y = `yearly_ridership`, group = 1)) +
-  geom_line() + 
-  ylab("Regional Rail Yearly Ridership") +
-  labs(title = paste("SEPTA Regional Rail Yearly Ridership from 2002 - 2018")) +
+  geom_line(colour = "azure4") +
+  geom_point(size=2, colour = "blue4") +
+  ylab("Demand Response Yearly Ridership") +
+  labs(title = paste("SEPTA Demand Response Yearly Ridership from 2002 - 2018")) +
+  scale_y_continuous(labels = comma) + #adding commas to the numbers on y axis
   theme_phl()
 
-rail_ridership_yearly +
-  scale_y_continuous(labels = comma) #adding commas to the numbers on y axis
+rail_ridership_yearly 
 
-# IN PROGRESS: combine the two plots into one graph with shared x-axis
+# Put the FRR and Ridership data 
 
-####### tehfolowing codes are not final
-#library(gtable)
-#library(grid) # low-level grid functions are required
-#g1 <- ggplotGrob(rail_recovery_yearly)
-#g1 <- gtable_add_cols(g1, unit(0,"mm")) # add a column for missing legend
-#g2 <- ggplotGrob(rail_ridership_yearly)
-#g <- rbind(g1, g2, size="first") # stack the two plots
-#g$widths <- unit.pmax(g1$widths, g2$widths) # use the largest widths
-# center the legend vertically
-#g$layout[grepl("guide", g$layout$name),c("t","b")] <- c(1,nrow(g))
-#grid.newpage()
-#grid.draw(g)
+#library(grid)
+grid.newpage()
+grid.draw(rbind(ggplotGrob(rail_recovery_yearly), ggplotGrob(rail_ridership_yearly), size = "last"))
+
 
 
