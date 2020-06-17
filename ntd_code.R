@@ -8,7 +8,7 @@ library(directlabels)
 library(readxl)
 library(rphl)
 library(scales)
-
+library(grid)
 
 peer_codes <- c(90154, 50066, 30030, 30019, 10003, 30034, 1) #WMATA, MBTA, SEPTA, Batltimore, Seattle, CTA
 peer_uzas <- c(1:10) #10 largest UZAs excluding NYC
@@ -21,15 +21,15 @@ nyc_name <- "MTA New York City Transit"
 
 # Download Monthly Unlinked Passenger Trips 
 url_monthly_upt <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/September%202019%20Adjusted%20Database.xlsx"
-ntd_monthly_upt <- download.file(url_monthly_upt, "./inputs/ntd_monthly_upt_file")
+#ntd_monthly_upt <- download.file(url_monthly_upt, "./inputs/ntd_monthly_upt_file")
 
 ##Download "TS2.1 - Service Data and Operating Expenses Time-Series by Mode" from FTA website
 url_TS2_1 <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/TS2.1TimeSeriesOpExpSvcModeTOS_2.xlsx"
-yearly_upt_file <- download.file(url_TS2_1, "./inputs/ntd_yearly_upt_file")
+#yearly_upt_file <- download.file(url_TS2_1, "./inputs/ntd_yearly_upt_file")
 
 #Download NTD Metrics data
 metrics_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
-ntd_metric_file <- download.file(metrics_url, "./inputs/ntd_metric_file")
+#ntd_metric_file <- download.file(metrics_url, "./inputs/ntd_metric_file")
 
 
 #### READ DATA INTO ENVIRONMENT-----------------------------------------------------------------------####
@@ -287,7 +287,7 @@ plot_agency_speed <- function(clean_ntd_metric_dat, mode, minimum_UPT, maximum_U
 
 plot_agency_speed(clean_ntd_metric_dat, "Bus", 50000000)
 
-
+#### PLOT RECOVERY RATIO FOR SEPTA REGIONAL RAIL (LINE CHART) ####
 
 # FUNCTION: clean_ntd_yearly_data
 # Paramaters: 
@@ -313,11 +313,13 @@ clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Ridership_file, Year1 
                         "DT" = "Demand Response Taxi", 
                         "VP" = "Vanpool", 
                         "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2018`)) %>%
+    select(c(`NTD ID`,`Agency Name`, Mode, `Mode Status`, `UZA Name`, Service, `1991`:`2018`)) %>%
     group_by(Mode) %>%
     gather(key = "Year", value = "operating_expense", c(`1991`:`2018`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
-    separate("Year", c("Year")) 
+    separate("Year", c("Year")) %>% 
+    group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
+    summarise(operating_expense = sum(operating_expense, na.rm = TRUE))
   
   #gather a dataframe to get yearly fare revenue for each mode of all agencies
   yearly_fare_revenue <- Fares_file %>% 
@@ -339,7 +341,9 @@ clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Ridership_file, Year1 
     group_by(Mode) %>%
     gather(key = "Year", value = "fare_revenue", c(`1991`:`2018`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
-    separate("Year", c("Year"))
+    separate("Year", c("Year")) %>% 
+    group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
+    summarise(fare_revenue = sum(fare_revenue, na.rm = TRUE))
     
   #gather a dataframe to get yearly ridership for each mode of all agencies
   yearly_ridership <- Ridership_file %>%
@@ -361,12 +365,14 @@ clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Ridership_file, Year1 
     group_by(Mode) %>%
     gather(key = "Year", value = "yearly_ridership", c(`1991`:`2018`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
-    separate("Year", c("Year"))
+    separate("Year", c("Year")) %>% 
+    group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
+    summarise(yearly_ridership = sum(yearly_ridership, na.rm = TRUE))
   
   
   output <- yearly_operating_expense %>%
-    full_join(yearly_fare_revenue) %>%
-    full_join(yearly_ridership) %>%
+    left_join(yearly_fare_revenue) %>%
+    left_join(yearly_ridership) %>%
     mutate(recovery_ratio = fare_revenue / operating_expense ) %>% 
     filter(is.na(`Agency Name`) == FALSE) %>% 
     filter(!is.na(operating_expense) & operating_expense > 0) %>% 
@@ -378,40 +384,45 @@ clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Ridership_file, Year1 
 ##create a dataframe
 clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_OpExp_data, ntd_yearly_Fares_data, ntd_yearly_ridership_data, Year1 = 2002, Year2 = 2018)
 
-# PLOT RECOVERY RATIO FOR SEPTA REGIONAL RAIL (LINE CHART)
-
-septa_yearly_fare_recovery <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Demand Response") %>% 
-  select(-c(operating_expense, fare_revenue, yearly_ridership)) %>%
-  #filter(is.na(`yearly_ridership`,`operating_expense`,`fare_revenue`) == FALSE) %>%
-  group_by(Year)
-
-septa_yearly_fare_recovery$recovery_ratio <- septa_yearly_fare_recovery$recovery_ratio*100 #Making the recovery ratio from decimal to %
-
-rail_recovery_yearly <- ggplot(septa_yearly_fare_recovery , aes(x = `Year`, y = `recovery_ratio`, group = 1)) +
-  geom_line(colour = "azure4") +
-  geom_point(size=2, colour = "blue4") +
-  ylim(0,20) + #adjust y-axis
-  ylab("Demand Response Recovery Ratio (%)") +
-  labs(title = paste("SEPTA Demand Response Fare Recovery Ratio from 2002 - 2018")) +
-  theme_phl()
+plot_yearly_recovery_bymode <- function(clean_ntd_yearly, NTD_ID = 30019, mode = "Bus") {
+  recovery_dat <- clean_ntd_yearly %>% filter(`NTD ID` == NTD_ID) %>% filter(Mode == mode) %>% 
+    select(-c(operating_expense, fare_revenue, yearly_ridership)) %>%
+    group_by(Year)
+  
+  agency_name <- recovery_dat$`Agency Name` %>% unique()
+  
+  plot <- ggplot(septa_yearly_fare_recovery , aes(x = `Year`, y = `recovery_ratio`, group = 1)) +
+    geom_line(colour = "azure4") +
+    geom_point(size=2, colour = "blue4") +
+    scale_y_continuous(labels = scales::label_percent(scale = 1), 
+                       name = paste(mode, "Recovery Ratio (%)", sep = " "),
+                       limits = c(min(septa_yearly_fare_recovery$recovery_ratio) - 5, 
+                                max(septa_yearly_fare_recovery$recovery_ratio) + 5)) +
+    labs(title = paste(agency_name, mode, "Fare Recovery Ratio from 2002 - 2018", sep = " ")) +
+    theme_phl()
   #+ theme(axis.title.x = element_blank(), axis.text.x = element_blank()) #Enable this line if you want to get rid of the first axis lables when combining two graphs 
-
-rail_recovery_yearly 
+  
+  return(plot)
+}
+rail_recovery_yearly <- plot_yearly_recovery_bymode(clean_ntd_yearly, mode = "Commuter Rail")
+rail_recovery_yearly
    
 # PLOT YEARLY RIDERSHIP FOR SEPTA REGIONAL RAIL (LINE CHART)
-septa_yearly_ridership <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Demand Response") %>% 
+septa_yearly_ridership <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Commuter Rail") %>% 
   select(-c(operating_expense, fare_revenue, recovery_ratio)) %>% 
   group_by(Year)
 
 rail_ridership_yearly <- ggplot(septa_yearly_ridership , aes(x = `Year`, y = `yearly_ridership`, group = 1)) +
   geom_line(colour = "azure4") +
   geom_point(size=2, colour = "blue4") +
-  ylab("Demand Response Yearly Ridership") +
+  ylab("Commuter Rail Yearly Ridership") +
   labs(title = paste("SEPTA Demand Response Yearly Ridership from 2002 - 2018")) +
-  scale_y_continuous(labels = comma) + #adding commas to the numbers on y axis
+  scale_y_continuous(labels = comma,
+                     limits = c(min(septa_yearly_ridership$yearly_ridership) - .05 * min(septa_yearly_ridership$yearly_ridership), 
+                                max(septa_yearly_ridership$yearly_ridership) + .05 * max(septa_yearly_ridership$yearly_ridership))) + #adding commas to the numbers on y axis
   theme_phl()
 
-rail_ridership_yearly 
+rail_ridership_yearly
 
 # Put the FRR and Ridership data 
 
