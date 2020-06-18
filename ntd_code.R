@@ -28,13 +28,22 @@ url_TS2_1 <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/TS2.1TimeSeriesOp
 #yearly_upt_file <- download.file(url_TS2_1, "./inputs/ntd_yearly_upt_file")
 
 #Download NTD Metrics data
-metrics_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
-#ntd_metric_file <- download.file(metrics_url, "./inputs/ntd_metric_file")
+metrics_2018_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_2.xlsm"
+ntd_metric_2018_file <- download.file(metrics_2018_url, "./inputs/ntd_metric_2018_file")
+metrics_2017_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
+ntd_metric_2017_file <- download.file(metrics_2017_url, "./inputs/ntd_metric_2017_file")
+metrics_2016_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_0.xlsm"
+ntd_metric_2016_file <- download.file(metrics_2016_url, "./inputs/ntd_metric_2016_file")
+metrics_2015_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
+ntd_metric_2015_file <- download.file(metrics_2015_url, "./inputs/ntd_metric_2015_file")
 
 
 #### READ DATA INTO ENVIRONMENT-----------------------------------------------------------------------####
 ntd_monthly_data <- read_excel("./inputs/ntd_monthly_upt_file", sheet = 3) #datasheet with monthly UPT for each agency and mode from Jan 2002 to Sept 2019
-ntd_metric_data <- read_excel("./inputs/ntd_metric_file", sheet = 3) #datasheet with metrics data by agencies - for national speed anlysis
+ntd_metric_2018_data <- read_excel("./inputs/ntd_metric_2018_file", sheet = 3)
+ntd_metric_2017_data <- read_excel("./inputs/ntd_metric_2017_file", sheet = 3)
+ntd_metric_2016_data <- read_excel("./inputs/ntd_metric_2016_file", sheet = 3)
+ntd_metric_2015_data <- read_excel("./inputs/ntd_metric_2015_file", sheet = 3)#datasheet with metrics data by agencies - for national speed anlysis
 ntd_yearly_OpExp_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 3) #datasheet with yearly Operating Expenses for each agency and mode from 1991 to 2018
 ntd_yearly_Fares_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 8) #datasheet with yearly Fare Revenues for each agency and mode from  2002 to 2018
 ntd_yearly_ridership_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 13)
@@ -260,9 +269,10 @@ clean_metric_data <- function(metric_data) {
 clean_ntd_metric_dat <- clean_metric_data(ntd_metric_data)
 
 
-plot_agency_speed <- function(clean_ntd_metric_dat, mode, minimum_UPT, maximum_UPT) {
+plot_agency_speed <- function(clean_ntd_metric_dat, city, mode, minimum_UPT, maximum_UPT) {
   if(missing(maximum_UPT)) {
     dat <- clean_ntd_metric_dat %>%
+      filter(`City` == city)
       filter(`Mode` == mode) %>% 
       filter(`Unlinked Passenger Trips` > minimum_UPT)
   }
