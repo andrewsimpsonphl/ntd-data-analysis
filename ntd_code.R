@@ -408,7 +408,7 @@ plot_yearly_recovery_bymode <- function(clean_ntd_yearly, NTD_ID = 30019, mode =
                        name = paste(mode, "Recovery Ratio (%)", sep = " "),
                        limits = c(min(recovery_dat$recovery_ratio) - .05, 
                                 max(recovery_dat$recovery_ratio) + .05)) +
-    labs(title = paste(agency_name, mode, "Fare Recovery Ratio from 2002 - 2018", sep = " ")) +
+    labs(title = paste(agency_name, mode, "Fare Recovery Ratio", sep = " ")) +
     theme_phl()
   #+ theme(axis.title.x = element_blank(), axis.text.x = element_blank()) #Enable this line if you want to get rid of the first axis lables when combining two graphs 
   
@@ -421,19 +421,19 @@ rail_recovery_yearly
 
 plot_yearly_ridership_bymode <- function(clean_ntd_yearly, NTD_ID = 30019, mode = "Bus") {
   recovery_dat <- clean_ntd_yearly %>% filter(`NTD ID` == NTD_ID) %>% filter(Mode == mode) %>% 
-    select(-c(operating_expense, recovery_ratio, yearly_ridership)) %>%
+    select(-c(operating_expense, recovery_ratio, fare_revenue)) %>%
     group_by(Year)
   
   agency_name <- recovery_dat$`Agency Name` %>% unique()
   
-  plot <- ggplot(septa_yearly_ridership , aes(x = `Year`, y = `yearly_ridership`, group = 1)) +
+  plot <- ggplot(recovery_dat , aes(x = `Year`, y = `yearly_ridership`, group = 1)) +
     geom_line(colour = "azure4") +
     geom_point(size=2, colour = "blue4") +
     ylab("Commuter Rail Yearly Ridership") +
-    labs(title = paste("SEPTA Demand Response Yearly Ridership from 2002 - 2018")) +
+    labs(title = paste(agency_name, mode, "Yearly Ridership", sep = " ")) +
     scale_y_continuous(labels = comma,
-                       limits = c(min(septa_yearly_ridership$yearly_ridership) - .05 * min(septa_yearly_ridership$yearly_ridership), 
-                                  max(septa_yearly_ridership$yearly_ridership) + .05 * max(septa_yearly_ridership$yearly_ridership))) + #adding commas to the numbers on y axis
+                       limits = c(min(recovery_dat$yearly_ridership) - .05 * min(recovery_dat$yearly_ridership), 
+                                  max(recovery_dat$yearly_ridership) + .05 * max(recovery_dat$yearly_ridership))) + #adding commas to the numbers on y axis
     theme_phl()
   #+ theme(axis.title.x = element_blank(), axis.text.x = element_blank()) #Enable this line if you want to get rid of the first axis lables when combining two graphs 
   
