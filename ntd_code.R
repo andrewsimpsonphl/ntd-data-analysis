@@ -282,7 +282,7 @@ plot_agency_speed <- function(clean_ntd_metric_dat, mode, minimum_UPT, maximum_U
     theme(axis.text.x = element_text(angle = 90)) +
     theme(legend.position = "none")
   
-  return(plot)
+  return(dat)
 }
 
 plot_agency_speed(clean_ntd_metric_dat, "Bus", 50000000)
@@ -391,13 +391,13 @@ plot_yearly_recovery_bymode <- function(clean_ntd_yearly, NTD_ID = 30019, mode =
   
   agency_name <- recovery_dat$`Agency Name` %>% unique()
   
-  plot <- ggplot(septa_yearly_fare_recovery , aes(x = `Year`, y = `recovery_ratio`, group = 1)) +
+  plot <- ggplot(recovery_dat , aes(x = `Year`, y = `recovery_ratio`, group = 1)) +
     geom_line(colour = "azure4") +
     geom_point(size=2, colour = "blue4") +
-    scale_y_continuous(labels = scales::label_percent(scale = 1), 
+    scale_y_continuous(labels = scales::label_percent(scale = 100), 
                        name = paste(mode, "Recovery Ratio (%)", sep = " "),
-                       limits = c(min(septa_yearly_fare_recovery$recovery_ratio) - 5, 
-                                max(septa_yearly_fare_recovery$recovery_ratio) + 5)) +
+                       limits = c(min(recovery_dat$recovery_ratio) - .05, 
+                                max(recovery_dat$recovery_ratio) + .05)) +
     labs(title = paste(agency_name, mode, "Fare Recovery Ratio from 2002 - 2018", sep = " ")) +
     theme_phl()
   #+ theme(axis.title.x = element_blank(), axis.text.x = element_blank()) #Enable this line if you want to get rid of the first axis lables when combining two graphs 
@@ -406,25 +406,32 @@ plot_yearly_recovery_bymode <- function(clean_ntd_yearly, NTD_ID = 30019, mode =
 }
 rail_recovery_yearly <- plot_yearly_recovery_bymode(clean_ntd_yearly, mode = "Commuter Rail")
 rail_recovery_yearly
-   
+
 # PLOT YEARLY RIDERSHIP FOR SEPTA REGIONAL RAIL (LINE CHART)
-septa_yearly_ridership <- clean_ntd_yearly %>% filter(`NTD ID` == 30019) %>% filter(Mode == "Commuter Rail") %>% 
-  select(-c(operating_expense, fare_revenue, recovery_ratio)) %>% 
-  group_by(Year)
 
-rail_ridership_yearly <- ggplot(septa_yearly_ridership , aes(x = `Year`, y = `yearly_ridership`, group = 1)) +
-  geom_line(colour = "azure4") +
-  geom_point(size=2, colour = "blue4") +
-  ylab("Commuter Rail Yearly Ridership") +
-  labs(title = paste("SEPTA Demand Response Yearly Ridership from 2002 - 2018")) +
-  scale_y_continuous(labels = comma,
-                     limits = c(min(septa_yearly_ridership$yearly_ridership) - .05 * min(septa_yearly_ridership$yearly_ridership), 
-                                max(septa_yearly_ridership$yearly_ridership) + .05 * max(septa_yearly_ridership$yearly_ridership))) + #adding commas to the numbers on y axis
-  theme_phl()
+plot_yearly_ridership_bymode <- function(clean_ntd_yearly, NTD_ID = 30019, mode = "Bus") {
+  recovery_dat <- clean_ntd_yearly %>% filter(`NTD ID` == NTD_ID) %>% filter(Mode == mode) %>% 
+    select(-c(operating_expense, recovery_ratio, yearly_ridership)) %>%
+    group_by(Year)
+  
+  agency_name <- recovery_dat$`Agency Name` %>% unique()
+  
+  plot <- ggplot(septa_yearly_ridership , aes(x = `Year`, y = `yearly_ridership`, group = 1)) +
+    geom_line(colour = "azure4") +
+    geom_point(size=2, colour = "blue4") +
+    ylab("Commuter Rail Yearly Ridership") +
+    labs(title = paste("SEPTA Demand Response Yearly Ridership from 2002 - 2018")) +
+    scale_y_continuous(labels = comma,
+                       limits = c(min(septa_yearly_ridership$yearly_ridership) - .05 * min(septa_yearly_ridership$yearly_ridership), 
+                                  max(septa_yearly_ridership$yearly_ridership) + .05 * max(septa_yearly_ridership$yearly_ridership))) + #adding commas to the numbers on y axis
+    theme_phl()
+  #+ theme(axis.title.x = element_blank(), axis.text.x = element_blank()) #Enable this line if you want to get rid of the first axis lables when combining two graphs 
+  
+  return(plot)
+}
 
+rail_ridership_yearly <- plot_yearly_ridership_bymode(clean_ntd_yearly, mode = "Commuter Rail")
 rail_ridership_yearly
-
-# Put the FRR and Ridership data 
 
 #library(grid)
 grid.newpage()
