@@ -372,6 +372,9 @@ bus_2018 <- plot_top_x_mode_systems(clean_ntd_metric_dat, "Bus", 20, data_year =
 grid.newpage()
 grid.draw(rbind(ggplotGrob(bus_2015), ggplotGrob(bus_2016), ggplotGrob(bus_2017), ggplotGrob(bus_2018), size = "last"))
 
+# SEPTA Bus Line Chart
+ggplot(clean_ntd_metric_dat %>% filter(`City` == "Philadelphia" & `Mode` == "Bus"), aes(x = year, y = `Vehicle Miles per Revenue Hour`)) +
+  geom_line(group = 1)
 
 #### PLOT RECOVERY RATIO FOR SEPTA REGIONAL RAIL (LINE CHART) ####
 
