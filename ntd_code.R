@@ -12,7 +12,7 @@ library(grid)
 
 peer_codes <- c(90154, 50066, 30030, 30019, 10003, 30034, 1) #WMATA, MBTA, SEPTA, Batltimore, Seattle, CTA
 peer_uzas <- c(1:10) #10 largest UZAs excluding NYC
-septa_name <- "Southeastern Pennsylvania Transportation Authority"
+septa_name <- "Southeastern Pennsylvania Transportation Authority(SEPTA)"
 nyc_name <- "MTA New York City Transit"
 
 
@@ -89,7 +89,7 @@ load_metric_data <- function(path = "./inputs/ntd_metric_data", agency_info_data
 }
 
 # Function to bring in VRM, VRH, UPT, Opex, and Fare data for every agency
-load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx") {
+load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx", Year1 = 2002, Year2 = 2018) {
   ntd_yearly_vrm_data <- read_excel(file_path, sheet = "VRM")
   ntd_yearly_vrh_data <- read_excel(file_path, sheet = "VRH")
   ntd_yearly_upt_data <- read_excel(file_path, sheet = "UPT")
@@ -277,7 +277,7 @@ load_monthly_upt <- function(path= "./inputs/ntd_monthly_upt_file.xlsx") {
 
 #### READ DATA INTO ENVIRONMENT-----------------------------------------------------------------------####
 
-ntd_yearly <- load_yearly_data()
+ntd_yearly <- load_yearly_data(Year1 = 2002, Year2 = 2018)
 agency_info_data <- read_excel("./inputs/agency_info_file", sheet = 1)
 metric_data <- load_metric_data(agency_info_data = agency_info_data)
 upt_monthly <- load_monthly_upt()
@@ -333,100 +333,109 @@ find_yearly_ridership_by_specific_Agency_Mode <- function(data = upt_monthly, ag
   
   return(output)
 }
+
+
 #test <- find_yearly_ridership_by_specific_Agency_Mode(clean_ntd_monthly, "Southeastern Pennsylvania Transportation Authority", "Bus")
 
 #### NEED TO MOVE TO YEARLY DATA PRODUCTS FOR THIS ----  CALENDAR YEAR ANNUAL RIDERSHIP PLOTS ####
 #agency bus ridership
-plot_agency_mode_yearly <- function(data, agency, mode, year1, year2) {
-  d <- data %>%
-    filter(Year >= year1 & Year <= year2) %>%
-    find_yearly_ridership_by_specific_Agency_Mode(agency, mode)
-  p <- ggplot(d, aes(x = Year, y = ridership, fill = Modes)) + geom_col() + 
-    geom_text(aes(label = paste(format(round(ridership / 1e6, 1), trim = TRUE), "M")), 
-              position = position_stack(vjust = 0.5), cex = (3)) + 
+plot_agency_mode_yearly <- function(ntd_yearly, agency_name = septa_name, mode, Year1 = 2002, Year2 = 2018) {
+  d <- ntd_yearly %>%
+    group_by(`Agency Name`, `Mode`, `Year`) %>% 
+    summarise(upt = sum(upt)) %>% 
+    filter(Year >= Year1 & Year <= Year2 & `Agency Name` == agency_name & `Mode` == mode)
+  
+  p <- ggplot(d, aes(x = Year, y = upt, fill = Mode)) + geom_col() + 
+    geom_text(aes(label = paste(format(round(upt / 1e6, 1), trim = TRUE), "M")), position = position_stack(vjust = 0.5), cex = (3)) + 
     scale_y_continuous("Annual Ridership", labels = scales::comma) + scale_fill_brewer(palette = "Paired") + 
-    labs(title = paste(agency, "Yearly Ridership on", mode)) + theme(legend.position = "none")
+    labs(title = paste(agency_name, "Yearly Ridership on", mode)) + theme(legend.position = "none") +
+    theme_phl()
+  
   return (p)
 }
-plot_agency_mode_yearly(clean_ntd_monthly, septa_name, "Bus", 2002, 2018)
-plot_agency_mode_yearly(clean_ntd_monthly, septa_name, "Heavy Rail", 2002, 2018)
-plot_agency_mode_yearly(clean_ntd_monthly, septa_name, "Commuter Rail", 2002, 2019)
-plot_agency_mode_yearly(clean_ntd_monthly, septa_name, "Streetcar Rail", 2012, 2018)
+plot_agency_mode_yearly(ntd_yearly, septa_name, "Bus", 2002, 2018)
+plot_agency_mode_yearly(ntd_yearly, septa_name, "Heavy Rail", 2002, 2018)
+plot_agency_mode_yearly(ntd_yearly, septa_name, "Commuter Rail", 2002, 2019)
+plot_agency_mode_yearly(ntd_yearly, septa_name, "Trolley", 2002, 2018)
 
-plot_agency_stackedmodes_yearly <- function(data, agency, year1, year2) {
-  d <-  data %>%
-    filter(Year >= year1 & Year <= year2) %>%
-    filter(Modes != "Demand Response") %>%
-    find_yearly_modal_ridership_by_specific_Agency(agency)
-  p <- ggplot(d, aes(x = Year, y = ridership, fill = Modes)) + geom_col() + 
-    geom_text(aes(label = paste(format(round(ridership / 1e6, 1), trim = TRUE), "M")), 
-              position = position_stack(vjust = 0.5), cex = (3)) + 
-    scale_y_continuous("Annual Ridership", labels = scales::comma) + theme_linedraw() + scale_fill_brewer(palette = "Paired") +
-    labs(title = paste(agency, "Yearly Ridership by Mode"))
+plot_agency_stackedmodes_yearly <- function(ntd_yearly, agency_name, year1, year2) {
+  d <- ntd_yearly %>%
+    group_by(`Agency Name`, `Mode`, `Year`) %>% 
+    summarise(upt = sum(upt)) %>% 
+    filter(Year >= Year1 & Year <= Year2 & `Agency Name` == agency_name)
+  
+  p <- ggplot(d, aes(x = Year, y = upt, fill = Mode)) + geom_col() + 
+    geom_text(aes(label = paste(format(round(upt / 1e6, 1), trim = TRUE), "M")), position = position_stack(vjust = 0.5), cex = (3)) + 
+    scale_y_continuous("Annual Ridership", labels = scales::comma) + scale_fill_brewer(palette = "Paired") + 
+    labs(title = paste(agency_name, "Yearly Ridership by Mode")) + theme(legend.position = "none") +
+    theme_phl()
   return (p)
 }
-plot_agency_stackedmodes_yearly(clean_ntd_monthly, septa_name, 2002, 2018)
-septa_modal_yearly_ridership <- plot_agency_stackedmodes_yearly(clean_ntd_monthly, septa_name, 2002, 2018)
+septa_modal_yearly_ridership <- plot_agency_stackedmodes_yearly(ntd_yearly, septa_name, 2002, 2018)
+septa_modal_yearly_ridership
 
-plot_agency_stackedmodes_yearly_pct <- function(data, agency, year1, year2) {
-  d <- data %>%
-    filter(Year >= year1 & Year <= year2) %>%
-    filter(Modes != "Demand Response") %>%
-    find_yearly_modal_ridership_by_specific_Agency(agency)
-  p <- ggplot(d, aes(x = Year, y = ridership, fill = Modes)) + geom_col(position = 'fill', stat = 'identity') + 
-    scale_y_continuous("Annual Ridership", labels = scales::percent) + theme_linedraw() + scale_fill_brewer(palette = "Paired") +
-    labs(title = paste(agency, " Yearly Ridership by Mode"))
+plot_agency_stackedmodes_yearly_pct <- function(ntd_yearly, agency_name, year1, year2) {
+  d <- ntd_yearly %>%
+    group_by(`Agency Name`, `Mode`, `Year`) %>% 
+    summarise(upt = sum(upt)) %>% 
+    filter(Year >= Year1 & Year <= Year2 & `Agency Name` == agency_name)
+  
+  p <- ggplot(d, aes(x = Year, y = upt, fill = Mode)) + geom_col(position = 'fill', stat = 'identity') + 
+    scale_y_continuous("Annual Ridership", labels = scales::percent) + theme_phl() + scale_fill_brewer(palette = "Paired") +
+    labs(title = paste(agency_name, " Yearly Ridership by Mode"))
   return (p)
 }
-plot_agency_stackedmodes_yearly_pct(clean_ntd_monthly, septa_name, 2002, 2018)
+plot_agency_stackedmodes_yearly_pct(ntd_yearly, septa_name, 2002, 2018)
 
 
 # plot line graph of yearly average, taking in a list of agencies (peer uzas), begging year, end year
-plot_agencies_yearly_ridership <- function(data, list, year1, year2) {
-  x <- data %>%
-    filter(`5 digit NTD ID` == list) %>% # only map to agency list
-    filter(Year >= year1 & Year <= year2) %>% #select rows between years
-    find_yearly_ridership_by_Agency() #drill down to necessary values
-  
-  p <- ggplot(x, aes(x = Year, y = ridership, colour =  `UZA Name`, group = `UZA Name`)) + geom_line() + 
+plot_agencies_yearly_ridership <- function(ntd_yearly, agency_list, Year1, Year2) {
+  x <- ntd_yearly %>%
+    group_by(`Agency Name`, `Year`) %>% 
+    summarise(upt = sum(upt)) %>% 
+    filter(`Agency Name` %in% agency_list) %>% # only map to agency list
+    filter(Year >= Year1 & Year <= Year2) #select rows between years
+
+  p <- ggplot(x, aes(x = Year, y = upt, colour =  `Agency Name`, group = `Agency Name`)) + geom_line() + 
     scale_y_continuous("Annual Ridership", labels = scales::comma) + 
     theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
-    geom_dl(aes(label = `UZA Name`), method = list(dl.combine("first.qp"), cex = 1)) + 
+    geom_dl(aes(label = `Agency Name`), method = list(dl.combine("last.qp"), list(dl.trans(x=x-3.5)), list(dl.trans(y=y+0.4)), cex = 0.75)) + 
     scale_color_discrete(guide = 'none') +
     labs(title = paste("Yearly Ridership by Peer Providers"))
   
   return(p)
 }
-plot_agencies_yearly_ridership(clean_ntd_monthly, peer_codes, 2010, 2017)
+plot_agencies_yearly_ridership(ntd_yearly, top_15_bus_agencies_2017[2:15], 2010, 2017) # Drop NYC - too much ridership!
 
 
-plot_uza_yearly_ridership <- function(data, list, year1, year2) {
-  x <- data %>%
-    filter(Year >= year1 & Year <= year2) %>% #select rows between years
-    find_yearly_ridership_by_UZA() %>% #drill down to necessary values
-    filter(str_detect(`UZA Name`, list)) %>% # only map top 20 UZAs
-    mutate(delta = ridership / first(ridership))
+plot_uza_yearly_ridership <- function(ntd_yearly, uza_list, year1, year2) {
+  x <- ntd_yearly %>%
+    group_by(`UZA Name`, `Year`) %>% 
+    summarise(upt = sum(upt)) %>% 
+    filter((`UZA Name` %in% uza_list & !is.na(`UZA Name`))) %>% # only map top 20 UZAs
+    filter(Year >= Year1 & Year <= Year2) #select rows between years
   
-  p <- ggplot(x, aes(x = Year, y = ridership, colour =  `UZA Name`, group = `UZA Name`)) + geom_line() + 
-    scale_y_continuous("Annual Ridership", labels = scales::comma, limits = c(-1, 750000000)) + 
+  p <- ggplot(x, aes(x = Year, y = upt, colour =  `UZA Name`, group = `UZA Name`)) + geom_line() + 
+    scale_y_continuous("Annual Ridership", labels = scales::comma) + 
     theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
     #theme(plot.margin = margin(20, 50, 0, 0, 'pt')) +
     geom_dl(aes(label = `UZA Name`), method = list(dl.combine("last.qp"), list(dl.trans(x=x-3.5)), list(dl.trans(y=y+0.4)), cex = 0.75)) + 
     scale_color_discrete(guide = 'none') +
-    labs(title = paste("Yearly Ridership by Metro Area (all regional transit providers)"))
+    labs(title = paste("Yearly Ridership by Metro Area (all regional transit providers)")) +
+    theme(plot.margin = unit(c(1,3,1,1), "lines")) 
   return(p)
 }
+plot_uza_yearly_ridership(ntd_yearly, top_15_transit_cities_2017[2:15], 2004, 2018)
 
-list_uzas <- "Chicago, IL-IN|Philadelphia, PA-NJ-DE-MD|Washington, DC-VA-MD|Boston, MA-NH-RI|Seattle, WA|Los Angeles-Long Beach-Anaheim, CA"
-plot_uza_yearly_ridership(clean_ntd_monthly, list_uzas, 2004, 2018)
-
-plot_uza_yearly_ridership_indexed <- function(data, list, year1, year2) {
-  x <- data %>%
-    filter(Year >= year1 & Year <= year2) %>% #select rows between years
-    find_yearly_ridership_by_UZA() %>% #drill down to necessary values
-    filter(ridership > 0) %>%
-    filter(str_detect(`UZA Name`, list)) %>% # only map top 20 UZAs
-    mutate(delta = ridership / first(ridership))
+plot_uza_yearly_ridership_indexed <- function(ntd_yearly, uza_list, Year1, Year2) {
+  x <- ntd_yearly %>%
+    group_by(`UZA Name`, `Year`) %>% 
+    summarise(upt = sum(upt)) %>% 
+    filter(Year >= Year1 & Year <= Year2) %>% #select rows between years
+    #find_yearly_ridership_by_UZA() %>% #drill down to necessary values
+    filter(upt > 0) %>%
+    filter((`UZA Name` %in% uza_list & !is.na(`UZA Name`))) %>% # only map top 20 UZAs
+    mutate(delta = upt / first(upt))
   
   p <- ggplot(x, aes(x = Year, y = delta, colour =  `UZA Name`, group = `UZA Name`)) + geom_line() + 
     scale_y_continuous("Annual Ridership Change, Indexed") + 
@@ -442,9 +451,7 @@ plot_uza_yearly_ridership_indexed <- function(data, list, year1, year2) {
   
   return(p)
 }
-
-list_uzas <- "Chicago, IL-IN|Philadelphia, PA-NJ-DE-MD|Washington, DC-VA-MD|Boston, MA-NH-RI|Seattle, WA|Los Angeles-Long Beach-Anaheim, CA|New York-Newark, NY-NJ-CT|Portland, OR"
-plot_uza_yearly_ridership_indexed(clean_ntd_monthly, list_uzas, 2008, 2018)
+plot_uza_yearly_ridership_indexed(ntd_yearly, top_15_transit_cities_2017, 2008, 2018)
 
 
 #### SPEED ANALYSIS ####
@@ -452,6 +459,21 @@ plot_uza_yearly_ridership_indexed(clean_ntd_monthly, list_uzas, 2008, 2018)
 # DEPRECATED - DON'T USE METRIC DATA FOR SPEED (ONLY GOES BACK 4 YEARS... USE THE MONTHLY DATASET)
 # add paramater for list of cities to highlight
 
+find_top_x_cities <- function(data, number_cities, data_year) {
+  dat <- data %>% 
+    group_by(`UZA Name`, Year) %>% 
+    summarise(upt = sum(`upt`)) %>% 
+    filter(`Year` == data_year) %>% 
+    arrange(-`upt`) %>% 
+    head(number_cities) %>% 
+    ungroup() %>% 
+    select(`UZA Name`) %>% 
+    as.list()
+  
+  list <- dat$`UZA Name`
+  
+  return(list)
+}
 find_top_x_cities_bymode <- function(data, number_cities, mode, data_year) {
   dat <- data %>% 
     group_by(`UZA Name`, Mode, Year) %>% 
@@ -482,13 +504,13 @@ find_top_x_agencies_bymode <- function(data, number_agencies, mode, data_year) {
   
   return(list)
 }
-
+top_15_transit_cities_2017 <- find_top_x_cities(ntd_yearly, 15, 2017)
 top_15_bus_cities_2017 <- find_top_x_cities_bymode(ntd_yearly, 15, "Bus", 2017)
 top_15_bus_agencies_2017 <- find_top_x_agencies_bymode(ntd_yearly, 15, "Bus", 2017)
 
 # need to fix to use years correctly
 plot_uza_speeds <- function(ntd_yearly, uza_list = find_top_x_cities_bymode(ntd_yearly, 15, "Bus", 2018), 
-                             mode, minimum_UPT = 0, maximum_UPT = Inf, data_year = 2018) {
+                             mode, minimum_UPT = 0, maximum_UPT = Inf, data_year = 2018, title_on = TRUE) {
   
   dat <- ntd_yearly %>%
     filter(`UZA Name` %in% uza_list & !is.na(`UZA Name`)) %>% 
@@ -503,16 +525,20 @@ plot_uza_speeds <- function(ntd_yearly, uza_list = find_top_x_cities_bymode(ntd_
     geom_col(aes(fill = highlight_flag)) +
     xlab("Uranized Area") + 
     ylab(paste0("Vehicle Miles per Revenue Hour ", data_year)) + 
-    #labs(title = paste0("Philadelphia Among Slowest Peer ", mode, " Systems (", data_year,  " Data)")) + 
     theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
     theme(axis.text.x = element_text(angle = 90)) +
     theme(legend.position = "none")
+  
+  if(title_on == TRUE) { 
+    return(plot + ggtitle(paste0("Philadelphia Among Slowest Peer ", mode, " Systems (", data_year,  " Data)")))
+  }
+  else{ return(plot) }
   
   return(plot)
 }
 
 plot_agency_speeds <- function(ntd_yearly, agency_list = find_top_x_agencies_bymode(ntd_yearly, 15, "Bus", 2017), 
-                               mode, minimum_UPT = 0, maximum_UPT = Inf, data_year = 2018) {
+                               mode, minimum_UPT = 0, maximum_UPT = Inf, data_year = 2018, title_on = TRUE) {
   dat <- ntd_yearly %>%
     filter(`Agency Name` %in% agency_list) %>% 
     filter(`Mode` == mode & `Year` == data_year) %>% 
@@ -525,27 +551,31 @@ plot_agency_speeds <- function(ntd_yearly, agency_list = find_top_x_agencies_bym
                           y = `Vehicle Miles per Revenue Hour`)) + 
     geom_col(aes(fill = highlight_flag)) +
     xlab("Agency") + 
-    ylab(paste0("Vehicle Miles per Revenue Hour (", data_year, ")")) + 
-    #labs(title = paste0("SEPTA Among Slowest Peer ", mode, " Systems (", data_year,  " Data)")) +
-    theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
+    ylab(paste0("Vehicle Miles per Revenue Hour (", data_year, ")")) +
+    theme_linedraw() + scale_fill_brewer(palette = "Paired") +
+    rphl::theme_phl()+ 
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     theme(legend.position = "none")
   
-  return(plot)
+  if(title_on == TRUE) { 
+      return(plot + ggtitle(paste0("SEPTA Among Slowest Peer ", mode, " Systems (", data_year,  " Data)")))
+    }
+  else{ return(plot) }
 }
-
 
 plot_uza_speeds(ntd_yearly, 
                   uza_list = find_top_x_cities_bymode(ntd_yearly, 15, "Bus", 2017), 
                   mode = "Bus", 
                   minimum_UPT = 0, 
-                  data_year = 2017)
+                  data_year = 2017,
+                  title_on = FALSE)
 
 plot_agency_speeds(ntd_yearly, 
                   agency_list = find_top_x_agencies_bymode(ntd_yearly, 15, "Bus", 2017), 
                   mode = "Bus", 
                   minimum_UPT = 0, 
-                  data_year = 2017)
+                  data_year = 2017, 
+                  title_on = TRUE)
 
 plot_speed_top_x_mode_cities <- function(ntd_yearly, mode, number_cities, minimum_UPT, maximum_upt, data_year) {
   uza_list <- find_top_x_cities_bymode(ntd_yearly, number_cities, mode, data_year)
