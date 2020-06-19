@@ -627,8 +627,6 @@ write_csv(septa_modal_yearly_ridership_data, "./outputs/data/septa_yearly_bymode
 
 #### PLOT RECOVERY RATIO FOR SEPTA REGIONAL RAIL (LINE CHART) ####
 
-# DEPRECATED - REPLACED BY MASTER YEARLY DATA FUNCTION
-
 # FUNCTION: clean_ntd_yearly_data
 # Paramaters: 
 # OpExp_file = ntd operating expenses by year for each agency and mode
@@ -636,97 +634,10 @@ write_csv(septa_modal_yearly_ridership_data, "./outputs/data/septa_yearly_bymode
 # Year1/Year2 = (inclusive) filter of years to return
 # returns a clean dataframe of yearly NTD data - currenlty just operating expensis and fare revenue
 
-clean_ntd_yearly_data <- function(OpExp_file, Fares_file, Ridership_file, Year1 = 1991, Year2 = 2018) {
-  #gather a dataframe to get yearly operating expense for each mode of all agencies
-  yearly_operating_expense <- OpExp_file %>%
-    mutate(Mode=recode(Mode, 
-                        "MB" = "Bus", 
-                        "CR" = "Commuter Rail", 
-                        "HR" = "Heavy Rail", 
-                        "LR" = "Trolley", 
-                        "SR" = "Trolley",
-                        "CB" = "Commuter Bus", 
-                        "DR" = "Demand Response", 
-                        "TB" = "Bus", 
-                        "RB" = "Bus Rapid Transit", 
-                        "IP" = "Incline Plane", 
-                        "DT" = "Demand Response Taxi", 
-                        "VP" = "Vanpool", 
-                        "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `Mode Status`, `UZA Name`, Service, `1991`:`2018`)) %>%
-    group_by(Mode) %>%
-    gather(key = "Year", value = "operating_expense", c(`1991`:`2018`), convert = TRUE) %>% 
-    mutate(Year = parse_date_time(Year, orders = "y")) %>% 
-    separate("Year", c("Year")) %>% 
-    group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
-    summarise(operating_expense = sum(operating_expense, na.rm = TRUE))
-  
-  #gather a dataframe to get yearly fare revenue for each mode of all agencies
-  yearly_fare_revenue <- Fares_file %>% 
-    mutate(Mode=recode(Mode, 
-                       "MB" = "Bus", 
-                       "CR" = "Commuter Rail", 
-                       "HR" = "Heavy Rail", 
-                       "LR" = "Trolley", 
-                       "SR" = "Trolley",
-                       "CB" = "Commuter Bus", 
-                       "DR" = "Demand Response", 
-                       "TB" = "Bus", 
-                       "RB" = "Bus Rapid Transit", 
-                       "IP" = "Incline Plane", 
-                       "DT" = "Demand Response Taxi", 
-                       "VP" = "Vanpool", 
-                       "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2018`)) %>%
-    group_by(Mode) %>%
-    gather(key = "Year", value = "fare_revenue", c(`1991`:`2018`), convert = TRUE) %>% 
-    mutate(Year = parse_date_time(Year, orders = "y")) %>% 
-    separate("Year", c("Year")) %>% 
-    group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
-    summarise(fare_revenue = sum(fare_revenue, na.rm = TRUE))
-    
-  #gather a dataframe to get yearly ridership for each mode of all agencies
-  yearly_ridership <- Ridership_file %>%
-    mutate(Mode=recode(Mode, 
-                       "MB" = "Bus", 
-                       "CR" = "Commuter Rail", 
-                       "HR" = "Heavy Rail", 
-                       "LR" = "Trolley", 
-                       "SR" = "Trolley",
-                       "CB" = "Commuter Bus", 
-                       "DR" = "Demand Response", 
-                       "TB" = "Bus", 
-                       "RB" = "Bus Rapid Transit", 
-                       "IP" = "Incline Plane", 
-                       "DT" = "Demand Response Taxi", 
-                       "VP" = "Vanpool", 
-                       "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2018`)) %>%
-    group_by(Mode) %>%
-    gather(key = "Year", value = "yearly_ridership", c(`1991`:`2018`), convert = TRUE) %>% 
-    mutate(Year = parse_date_time(Year, orders = "y")) %>% 
-    separate("Year", c("Year")) %>% 
-    group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
-    summarise(yearly_ridership = sum(yearly_ridership, na.rm = TRUE))
-  
-  
-  output <- yearly_operating_expense %>%
-    left_join(yearly_fare_revenue) %>%
-    left_join(yearly_ridership) %>%
-    mutate(recovery_ratio = fare_revenue / operating_expense ) %>% 
-    filter(is.na(`Agency Name`) == FALSE) %>% 
-    filter(!is.na(operating_expense) & operating_expense > 0) %>% 
-    filter(Year >= Year1 & Year <= Year2)
+#clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_OpExp_data, ntd_yearly_Fares_data, ntd_yearly_ridership_data, Year1 = 2002, Year2 = 2018)
 
-  return(output)
-}
-
-##create a dataframe
-clean_ntd_yearly <- clean_ntd_yearly_data(ntd_yearly_OpExp_data, ntd_yearly_Fares_data, ntd_yearly_ridership_data, Year1 = 2002, Year2 = 2018)
-
-plot_yearly_recovery_bymode <- function(clean_ntd_yearly, NTD_ID = 30019, mode = "Bus") {
-  recovery_dat <- clean_ntd_yearly %>% filter(`NTD ID` == NTD_ID) %>% filter(Mode == mode) %>% 
-    select(-c(operating_expense, fare_revenue, yearly_ridership)) %>%
+plot_yearly_recovery_bymode <- function(ntd_yearly, NTD_ID = 30019, mode = "Bus") {
+  recovery_dat <- ntd_yearly %>% filter(`NTD ID` == NTD_ID) %>% filter(Mode == mode) %>% 
     group_by(Year)
   
   agency_name <- recovery_dat$`Agency Name` %>% unique()
@@ -744,33 +655,32 @@ plot_yearly_recovery_bymode <- function(clean_ntd_yearly, NTD_ID = 30019, mode =
   
   return(plot)
 }
-rail_recovery_yearly <- plot_yearly_recovery_bymode(clean_ntd_yearly, mode = "Commuter Rail")
+rail_recovery_yearly <- plot_yearly_recovery_bymode(ntd_yearly, mode = "Commuter Rail")
 rail_recovery_yearly
 
 # PLOT YEARLY RIDERSHIP FOR SEPTA REGIONAL RAIL (LINE CHART)
 
-plot_yearly_ridership_bymode <- function(clean_ntd_yearly, NTD_ID = 30019, mode = "Bus") {
-  recovery_dat <- clean_ntd_yearly %>% filter(`NTD ID` == NTD_ID) %>% filter(Mode == mode) %>% 
-    select(-c(operating_expense, recovery_ratio, fare_revenue)) %>%
+plot_yearly_ridership_bymode <- function(ntd_yearly, NTD_ID = 30019, mode = "Bus") {
+  recovery_dat <- ntd_yearly %>% filter(`NTD ID` == NTD_ID) %>% filter(Mode == mode) %>% 
     group_by(Year)
   
   agency_name <- recovery_dat$`Agency Name` %>% unique()
   
-  plot <- ggplot(recovery_dat , aes(x = `Year`, y = `yearly_ridership`, group = 1)) +
+  plot <- ggplot(recovery_dat , aes(x = `Year`, y = `upt`, group = 1)) +
     geom_line(colour = "azure4") +
     geom_point(size=2, colour = "blue4") +
     ylab("Commuter Rail Yearly Ridership") +
     labs(title = paste(agency_name, mode, "Yearly Ridership", sep = " ")) +
     scale_y_continuous(labels = comma,
-                       limits = c(min(recovery_dat$yearly_ridership) - .05 * min(recovery_dat$yearly_ridership), 
-                                  max(recovery_dat$yearly_ridership) + .05 * max(recovery_dat$yearly_ridership))) + #adding commas to the numbers on y axis
+                       limits = c(min(recovery_dat$upt) - .05 * min(recovery_dat$upt), 
+                                  max(recovery_dat$upt) + .05 * max(recovery_dat$upt))) + #adding commas to the numbers on y axis
     theme_phl()
   #+ theme(axis.title.x = element_blank(), axis.text.x = element_blank()) #Enable this line if you want to get rid of the first axis lables when combining two graphs 
   
   return(plot)
 }
 
-rail_ridership_yearly <- plot_yearly_ridership_bymode(clean_ntd_yearly, mode = "Commuter Rail")
+rail_ridership_yearly <- plot_yearly_ridership_bymode(ntd_yearly, mode = "Commuter Rail")
 rail_ridership_yearly
 
 #library(grid)
