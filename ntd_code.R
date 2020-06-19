@@ -66,7 +66,6 @@ load_metric_data <- function(path = "./inputs/ntd_metric_data", agency_info_data
 dowload_metric_data()
 
 #### READ DATA INTO ENVIRONMENT-----------------------------------------------------------------------####
-ntd_monthly_data <- read_excel("./inputs/ntd_monthly_upt_file", sheet = 3) #datasheet with monthly UPT for each agency and mode from Jan 2002 to Sept 2019
 ntd_yearly_OpExp_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 3) #datasheet with yearly Operating Expenses for each agency and mode from 1991 to 2018
 ntd_yearly_Fares_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 8) #datasheet with yearly Fare Revenues for each agency and mode from  2002 to 2018
 ntd_yearly_ridership_data <- read_excel("./inputs/ntd_yearly_upt_file", sheet = 13)
@@ -76,7 +75,9 @@ metric_data <- load_metric_data(agency_info_data = agency_info_data)
 
 #### UPT ANALYSIS ########
 # TIDY UP NTD DATA
-clean_ntd_monthly_data <- function(data_file) {
+get_ntd_monthly_ridership <- function(path= "./inputs/ntd_monthly_upt_file") {
+  data_file <- read_excel(path, sheet = 3) #datasheet with monthly UPT for each agency and mode from Jan 2002 to Sept 2019
+  
   hold <- data_file %>%
     mutate(Modes=recode(Modes, "MB" = "Bus", "CR" = "Commuter Rail", "HR" = "Heavy Rail", 
                         "LR" = "Trolley", "SR" = "Trolley", "CB" = "Commuter Bus", 
@@ -93,8 +94,8 @@ clean_ntd_monthly_data <- function(data_file) {
     filter(is.na(Agency) == FALSE)
 }
 
-clean_ntd_monthly <- clean_ntd_monthly_data(ntd_monthly_data)
-
+clean_ntd_monthly <- get_ntd_monthly_ridership()
+clean_ntd_monthly
   
 septa <- clean_ntd_monthly %>%
   filter(Agency == "Southeastern Pennsylvania Transportation Authority")
@@ -192,6 +193,7 @@ plot_agency_stackedmodes_yearly <- function(data, agency, year1, year2) {
   return (p)
 }
 plot_agency_stackedmodes_yearly(clean_ntd_monthly, septa_name, 2002, 2018)
+septa_modal_yearly_ridership <- plot_agency_stackedmodes_yearly(clean_ntd_monthly, septa_name, 2002, 2018)
 
 plot_agency_stackedmodes_yearly_pct <- function(data, agency, year1, year2) {
   d <- data %>%
@@ -291,8 +293,9 @@ clean_metric_data <- function(metric_data) {
                           "TB" = "Bus")) %>%
     #mutate(Name = as.factor(`Name`)) %>%
     mutate(year = unlist(year)) %>% 
-    group_by(City, Mode, year) %>%
-    summarise("Vehicle Miles per Revenue Hour" = mean(vrm_per_vrh), 
+    group_by(`NTD ID`, `Agency Name`, City, Mode, year) %>% # uses group/summarise to combined directly operated and purchased transit
+    summarise(vrm = sum(`Vehicle Revenue Miles`, na.rm = TRUE),
+              "Vehicle Miles per Revenue Hour" = weighted.mean(vrm_per_vrh, `Vehicle Revenue Miles`), 
               "Unlinked Passenger Trips" = sum(`Unlinked Passenger Trips`)) %>%
     mutate(highlight_flag = ifelse(City == 'Philadelphia', T, F))
     
@@ -303,26 +306,23 @@ clean_ntd_metric_dat <- clean_metric_data(metric_data)
 
 
 # need to fix to use years correctly
-plot_agency_speed <- function(clean_ntd_metric_dat, city_list = c("Philadelphia", "Boston"), mode, minimum_UPT = 0, maximum_UPT, data_year = 2018) {
-  if(missing(maximum_UPT)) {
-    dat <- clean_ntd_metric_dat %>%
-      filter(`City` %in% city_list) %>% 
-      filter(`Mode` == mode & `year` == data_year) %>% 
-      filter(`Unlinked Passenger Trips` > minimum_UPT)
-  }
-  else {
-    dat <- clean_ntd_metric_dat %>%
-      filter(`City` %in% city_list) %>% 
-      filter(`Mode` == mode & `year` == data_year) %>% 
-      filter(`Unlinked Passenger Trips` > minimum_UPT & `Unlinked Passenger Trips` < maximum_UPT)
-  }
+plot_city_speeds <- function(clean_ntd_metric_dat, city_list = c("Philadelphia", "Boston"), 
+                             mode, minimum_UPT = 0, maximum_UPT = Inf, data_year = 2018) {
+  
+  dat <- clean_ntd_metric_dat %>%
+    filter(`City` %in% city_list) %>% 
+    filter(`Mode` == mode & `year` == data_year) %>% 
+    filter(`Unlinked Passenger Trips` > minimum_UPT & `Unlinked Passenger Trips` < maximum_UPT) %>% 
+    group_by(City, highlight_flag) %>% 
+    summarise(upt = sum(`Unlinked Passenger Trips`, na.rm = TRUE),
+              `Vehicle Miles per Revenue Hour` = weighted.mean(`Vehicle Miles per Revenue Hour`, `Unlinked Passenger Trips`)) # weight the speed by the number of miles traveled when combining multiple operators
   
   plot <- ggplot(dat, aes(x = reorder(City, -`Vehicle Miles per Revenue Hour`), 
                           y = `Vehicle Miles per Revenue Hour`)) + 
     geom_col(aes(fill = highlight_flag)) +
     xlab("City") + 
-    ylab("Vehicle Miles per Revenue Hour") + 
-    labs(title = paste0("Philadelphia Among Slowest Peer ", mode, " Systems (", data_year,  " Data)")) + 
+    ylab(paste0("Vehicle Miles per Revenue Hour ", data_year)) + 
+    #labs(title = paste0("Philadelphia Among Slowest Peer ", mode, " Systems (", data_year,  " Data)")) + 
     theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
     theme(axis.text.x = element_text(angle = 90)) +
     theme(legend.position = "none")
@@ -330,10 +330,35 @@ plot_agency_speed <- function(clean_ntd_metric_dat, city_list = c("Philadelphia"
   return(plot)
 }
 
+plot_agency_speeds <- function(clean_ntd_metric_dat, agency_list = c("MTA New York City Transit", "Chicago Transit Authority"), 
+                               mode, minimum_UPT = 0, maximum_UPT = Inf, data_year = 2018) {
+  dat <- clean_ntd_metric_dat %>%
+    filter(`Agency Name` %in% agency_list) %>% 
+    filter(`Mode` == mode & `year` == data_year) %>% 
+    filter(`Unlinked Passenger Trips` > minimum_UPT & `Unlinked Passenger Trips` < maximum_UPT) %>% 
+    group_by(`Agency Name`, highlight_flag) %>% 
+    summarise(upt = sum(`Unlinked Passenger Trips`, na.rm = TRUE),
+              `Vehicle Miles per Revenue Hour` = weighted.mean(`Vehicle Miles per Revenue Hour`, `Unlinked Passenger Trips`)) # weight the speed by the number of miles traveled when combining multiple operators
+  
+  plot <- ggplot(dat, aes(x = reorder(`Agency Name`, -`Vehicle Miles per Revenue Hour`), 
+                          y = `Vehicle Miles per Revenue Hour`)) + 
+    geom_col(aes(fill = highlight_flag)) +
+    xlab("Agency") + 
+    ylab(paste0("Vehicle Miles per Revenue Hour ", data_year)) + 
+    #labs(title = paste0("SEPTA Among Slowest Peer ", mode, " Systems (", data_year,  " Data)")) +
+    theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    theme(legend.position = "none")
+  
+  return(plot)
+}
+
 find_top_x_cities_bymode <- function(data, number_cities, mode, data_year) {
   dat <- data %>% 
+    group_by(City, Mode, year) %>% 
+    summarise(upt = sum(`Unlinked Passenger Trips`)) %>% 
     filter(Mode == mode & `year` == data_year) %>% 
-    arrange(-`Unlinked Passenger Trips`) %>% 
+    arrange(-`upt`) %>% 
     head(number_cities) %>% 
     ungroup() %>% 
     select(City) %>% 
@@ -343,38 +368,118 @@ find_top_x_cities_bymode <- function(data, number_cities, mode, data_year) {
   
   return(list)
 }
+find_top_x_agencies_bymode <- function(data, number_agencies, mode, data_year) {
+  dat <- data %>% 
+    group_by(`NTD ID`, `Agency Name`, Mode, year) %>% 
+    summarise(upt = sum(`Unlinked Passenger Trips`)) %>% 
+    filter(Mode == mode & `year` == data_year) %>% 
+    arrange(-`upt`) %>% 
+    head(number_agencies) %>% 
+    ungroup() %>% 
+    select(`Agency Name`) %>% 
+    as.list()
+  
+  list <- dat$`Agency Name`
+  
+  return(list)
+}
 
 top_15_bus_cities_2017 <- find_top_x_cities_bymode(clean_ntd_metric_dat, 15, "Bus", 2017)
+top_15_bus_agencies_2017 <- find_top_x_agencies_bymode(clean_ntd_metric_dat, 15, "Bus", 2017)
 
-plot_agency_speed(clean_ntd_metric_dat, 
+plot_city_speeds(clean_ntd_metric_dat, 
                   city_list = top_15_bus_cities_2017, 
                   mode = "Bus", 
                   minimum_UPT = 0, 
                   data_year = 2017)
 
-plot_top_x_mode_systems <- function(clean_ntd_metric_data, mode, number_cities, minimum_UPT, maximum_upt, data_year) {
+plot_agency_speeds(clean_ntd_metric_dat, 
+                  agency_list = top_15_bus_agencies_2017, 
+                  mode = "Bus", 
+                  minimum_UPT = 0, 
+                  data_year = 2017)
+
+plot_speed_top_x_mode_cities <- function(clean_ntd_metric_data, mode, number_cities, minimum_UPT, maximum_upt, data_year) {
   city_list <- find_top_x_cities_bymode(clean_ntd_metric_data, number_cities, mode, data_year)
   
-  plot <-plot_agency_speed(clean_ntd_metric_dat, 
+  plot <- plot_city_speeds(clean_ntd_metric_dat, 
                     city_list = city_list, 
                     mode = mode, 
-                    minimum_UPT = 0, 
-                    data_year = data_year)
+                    data_year = data_year) +
+    labs(title = paste0(number_cities, " Largest ", mode, " Regions, Ordered by Effective Speed (", data_year, ")"))
   
   return(plot)
 }
+plot_speed_top_x_mode_cities(clean_ntd_metric_dat, "Bus", 15, data_year = 2017)
 
-bus_2015 <- plot_top_x_mode_systems(clean_ntd_metric_dat, "Bus", 20, data_year = 2015)
-bus_2016 <- plot_top_x_mode_systems(clean_ntd_metric_dat, "Bus", 20, data_year = 2016)
-bus_2017 <- plot_top_x_mode_systems(clean_ntd_metric_dat, "Bus", 20, data_year = 2017)
-bus_2018 <- plot_top_x_mode_systems(clean_ntd_metric_dat, "Bus", 20, data_year = 2018)
+plot_speed_top_x_mode_agencies <- function(clean_ntd_metric_data, mode, number_agencies, minimum_UPT, maximum_upt, data_year) {
+  agency_list <- find_top_x_agencies_bymode(clean_ntd_metric_data, number_agencies, mode, data_year)
+  
+  plot <- plot_agency_speeds(clean_ntd_metric_dat, 
+                           agency_list = agency_list, 
+                           mode = mode, 
+                           data_year = data_year) + 
+    labs(title = paste0(number_agencies, " Largest ", mode, " Agencies, Ordered by Effective Speed (", data_year, ")"))
+  
+  return(plot)
+}
+plot_speed_top_x_mode_agencies(clean_ntd_metric_dat, "Commuter Rail", 6, data_year = 2017)
+plot_speed_top_x_mode_agencies(clean_ntd_metric_dat, "Bus", 15, data_year = 2017)
+largest_15agency_bus_speeds_2018 <- plot_speed_top_x_mode_agencies(clean_ntd_metric_dat, "Bus", 15, data_year = 2018)
+largest_15agency_bus_speeds_2018
+
+rail_2015 <- plot_speed_top_x_mode_agencies(clean_ntd_metric_dat, "Commuter Rail", 6, data_year = 2015)
+rail_2016 <- plot_speed_top_x_mode_agencies(clean_ntd_metric_dat, "Commuter Rail", 6, data_year = 2016)
+rail_2017 <- plot_speed_top_x_mode_agencies(clean_ntd_metric_dat, "Commuter Rail", 6, data_year = 2017)
+rail_2018 <- plot_speed_top_x_mode_agencies(clean_ntd_metric_dat, "Commuter Rail", 6, data_year = 2018)
+
+rail_2015
+rail_2016
+rail_2017
+rail_2018
+
+grid.newpage()
+grid.draw(rbind(ggplotGrob(rail_2017), ggplotGrob(rail_2018), size = "last"))
+
+largest_15cities_bus_speeds_2018 <- plot_speed_top_x_mode_cities(clean_ntd_metric_dat, "Bus", 15, data_year = 2018)
+
+bus_2015 <- plot_speed_top_x_mode_cities(clean_ntd_metric_dat, "Bus", 15, data_year = 2015)
+bus_2016 <- plot_speed_top_x_mode_cities(clean_ntd_metric_dat, "Bus", 20, data_year = 2016)
+bus_2017 <- plot_speed_top_x_mode_cities(clean_ntd_metric_dat, "Bus", 20, data_year = 2017)
+bus_2018 <- plot_speed_top_x_mode_cities(clean_ntd_metric_dat, "Bus", 20, data_year = 2018)
 
 grid.newpage()
 grid.draw(rbind(ggplotGrob(bus_2015), ggplotGrob(bus_2016), ggplotGrob(bus_2017), ggplotGrob(bus_2018), size = "last"))
 
 # SEPTA Bus Line Chart
-ggplot(clean_ntd_metric_dat %>% filter(`City` == "Philadelphia" & `Mode` == "Bus"), aes(x = year, y = `Vehicle Miles per Revenue Hour`)) +
-  geom_line(group = 1)
+ggplot(clean_ntd_metric_dat %>% filter(`NTD ID` == "30019" & `Mode` == "Bus"), aes(x = year, y = `Vehicle Miles per Revenue Hour`)) +
+  geom_line(group = 1) 
+
+plot_yearly_agency_mode_speed <- function(clean_ntd_metric_dat, ntd_id = 30019, mode = "Bus") {
+  dat <- clean_ntd_metric_dat %>% filter(`NTD ID` == ntd_id & `Mode` == mode)
+  
+  plot <- ggplot(dat, aes(x = year, y = `Vehicle Miles per Revenue Hour`)) +
+            geom_line(group = 1) +
+            scale_y_continuous(limits = c(min(dat$`Vehicle Miles per Revenue Hour`) - 0.1 * min(dat$`Vehicle Miles per Revenue Hour`),
+                                          max(dat$`Vehicle Miles per Revenue Hour`) + 0.1 * max(dat$`Vehicle Miles per Revenue Hour`))) +
+            scale_x_discrete(name = "Year")
+        
+  return(plot)
+}
+septa_bus_speeds_plot <- plot_yearly_agency_mode_speed(clean_ntd_metric_dat, 30019, "Bus")
+septa_CR_speeds_plot <- plot_yearly_agency_mode_speed(clean_ntd_metric_dat, 30019, "Commuter Rail")
+
+
+# Datasets for Andy
+septa_bus_speeds <- septa_bus_speeds_plot$data
+peer_city_bus_speeds <- largest_15cities_bus_speeds_2018$data
+peer_agency_bus_speeds <- largest_15agency_bus_speeds_2018$data
+septa_modal_yearly_ridership_data <- septa_modal_yearly_ridership$data
+
+write_csv(septa_bus_speeds, "./outputs/data/septa_bus_speeds_yearly.csv")
+write_csv(peer_city_bus_speeds, "./outputs/data/peer_city_bus_speeds.csv")
+write_csv(peer_agency_bus_speeds, "./outputs/data/peer_agency_bus_speeds.csv")
+write_csv(septa_modal_yearly_ridership_data, "./outputs/data/septa_yearly_bymode.csv")
 
 #### PLOT RECOVERY RATIO FOR SEPTA REGIONAL RAIL (LINE CHART) ####
 
