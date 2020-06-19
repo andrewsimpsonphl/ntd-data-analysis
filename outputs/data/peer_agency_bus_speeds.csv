@@ -1,0 +1,16 @@
+Agency Name,highlight_flag,upt,Vehicle Miles per Revenue Hour,.group
+Chicago Transit Authority(CTA),FALSE,242173010,9.028793118356177,1
+City and County of Honolulu(DTS),FALSE,64119604,12.799505399213492,2
+City and County of San Francisco(SFMTA),FALSE,161008879,7.298889654301258,3
+Denver Regional Transportation District(RTD),FALSE,70540514,12.684795685995626,4
+King County Department of Metro Transit(KCM),FALSE,122212367,10.584888989047842,5
+Los Angeles County Metropolitan Transportation Authority (LACMTA),FALSE,273625420,10.490098361930148,6
+Maryland Transit Administration(MTA),FALSE,63797467,11.123424597071965,7
+Massachusetts Bay Transportation Authority(MBTA),FALSE,105261625,8.98890653881818,8
+"Metropolitan Transit Authority of Harris County, Texas (Metro)",FALSE,59555011,12.151745580835419,9
+MTA Bus Company(MTABUS),FALSE,137618503,8.154388942204964,10
+MTA New York City Transit(NYCT),FALSE,691981427,7.07155634310883,11
+New Jersey Transit Corporation(NJ TRANSIT),FALSE,151640635,14.237537507817269,12
+Regional Transportation Commission of Southern Nevada(RTC),FALSE,64425687,11.629897997747396,13
+Southeastern Pennsylvania Transportation Authority(SEPTA),TRUE,166620201,9.876954424144367,14
+Washington Metropolitan Area Transit Authority(WMATA),FALSE,119681096,9.83774820285775,15
