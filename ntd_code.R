@@ -277,67 +277,16 @@ load_monthly_upt <- function(path= "./inputs/ntd_monthly_upt_file.xlsx") {
 
 #### READ DATA INTO ENVIRONMENT-----------------------------------------------------------------------####
 
+# Key assumptions: 
+# Bus = Motorbus and Trolley Bus operations
+# Trolley = Streetcar Rail and Light rail operations (becasue SEPTA switched their class from Light Rail to Streetcar in mid 00's)
 ntd_yearly <- load_yearly_data(Year1 = 2002, Year2 = 2018)
 agency_info_data <- read_excel("./inputs/agency_info_file", sheet = 1)
 metric_data <- load_metric_data(agency_info_data = agency_info_data)
 upt_monthly <- load_monthly_upt()
 
-#### UPT ANALYSIS ########
+#### YEARLY UPT ANALYSIS ########
 
-# Helper functions to pull together specific monthly data frames
-find_yearly_ridership_by_AgencyMode <- function(data = upt_monthly) {
-  output <- data %>%
-    group_by(Agency, `UZA Name`, Modes, Year) %>%
-    summarise(ridership = sum(ridership, na.rm = TRUE))
-  
-  return(output)
-}
-find_yearly_ridership_by_Mode <- function(data = upt_monthly) {
-  output <- data %>%
-    group_by(Modes,  `UZA Name`, Year) %>%
-    summarise(ridership = sum(ridership, na.rm = TRUE))
-  
-  return(output)
-}
-find_yearly_ridership_by_Agency <- function(data = upt_monthly) {
-  output <- data %>%
-    group_by(Agency,  `UZA Name`, Year) %>%
-    summarise(n = n(), ridership = sum(ridership, na.rm = TRUE))
-  return(output)
-}
-find_yearly_ridership_by_UZA <- function(data = upt_monthly) {
-  output <- data %>%
-    group_by(UZA, `UZA Name`, Year) %>%
-    summarise(n = n(), ridership = sum(ridership, na.rm = TRUE))
-  return(output)
-}
-find_yearly_ridership_by_specific_Agency <- function(data = upt_monthly, agency_name) {
-  output <- data %>%
-    filter(Agency == agency_name) %>%
-    find_yearly_ridership_by_Agency()
-  
-  return(output)
-}
-#test <- find_yearly_ridership_by_specific_Agency(clean_ntd_monthly, "Southeastern Pennsylvania Transportation Authority")
-find_yearly_modal_ridership_by_specific_Agency <- function(data = upt_monthly, agency_name) {
-  output <- data %>%
-    filter(Agency == agency_name) %>%
-    find_yearly_ridership_by_AgencyMode()
-  
-  return(output)
-}
-find_yearly_ridership_by_specific_Agency_Mode <- function(data = upt_monthly, agency_name, mode) {
-  output <- data %>%
-    filter(Agency == agency_name & Modes == mode) %>%
-    find_yearly_ridership_by_AgencyMode()
-  
-  return(output)
-}
-
-
-#test <- find_yearly_ridership_by_specific_Agency_Mode(clean_ntd_monthly, "Southeastern Pennsylvania Transportation Authority", "Bus")
-
-#### NEED TO MOVE TO YEARLY DATA PRODUCTS FOR THIS ----  CALENDAR YEAR ANNUAL RIDERSHIP PLOTS ####
 #agency bus ridership
 plot_agency_mode_yearly <- function(ntd_yearly, agency_name = septa_name, mode, Year1 = 2002, Year2 = 2018) {
   d <- ntd_yearly %>%
@@ -353,10 +302,11 @@ plot_agency_mode_yearly <- function(ntd_yearly, agency_name = septa_name, mode, 
   
   return (p)
 }
-plot_agency_mode_yearly(ntd_yearly, septa_name, "Bus", 2002, 2018)
-plot_agency_mode_yearly(ntd_yearly, septa_name, "Heavy Rail", 2002, 2018)
-plot_agency_mode_yearly(ntd_yearly, septa_name, "Commuter Rail", 2002, 2019)
-plot_agency_mode_yearly(ntd_yearly, septa_name, "Trolley", 2002, 2018)
+
+septa_bus_yearly <- plot_agency_mode_yearly(ntd_yearly, septa_name, "Bus", 2002, 2018)
+septa_subel_yearly <- plot_agency_mode_yearly(ntd_yearly, septa_name, "Heavy Rail", 2002, 2018)
+septa_regional_yearly <- plot_agency_mode_yearly(ntd_yearly, septa_name, "Commuter Rail", 2002, 2019)
+septa_trolley_yearly <- plot_agency_mode_yearly(ntd_yearly, septa_name, "Trolley", 2002, 2018)
 
 plot_agency_stackedmodes_yearly <- function(ntd_yearly, agency_name, year1, year2) {
   d <- ntd_yearly %>%
@@ -371,8 +321,8 @@ plot_agency_stackedmodes_yearly <- function(ntd_yearly, agency_name, year1, year
     theme_phl()
   return (p)
 }
+
 septa_modal_yearly_ridership <- plot_agency_stackedmodes_yearly(ntd_yearly, septa_name, 2002, 2018)
-septa_modal_yearly_ridership
 
 plot_agency_stackedmodes_yearly_pct <- function(ntd_yearly, agency_name, year1, year2) {
   d <- ntd_yearly %>%
@@ -385,30 +335,35 @@ plot_agency_stackedmodes_yearly_pct <- function(ntd_yearly, agency_name, year1, 
     labs(title = paste(agency_name, " Yearly Ridership by Mode"))
   return (p)
 }
-plot_agency_stackedmodes_yearly_pct(ntd_yearly, septa_name, 2002, 2018)
+septa_yearly_stacked <- plot_agency_stackedmodes_yearly_pct(ntd_yearly, septa_name, 2002, 2018)
 
 
 # plot line graph of yearly average, taking in a list of agencies (peer uzas), begging year, end year
-plot_agencies_yearly_ridership <- function(ntd_yearly, agency_list, Year1, Year2) {
+plot_agencies_yearly_ridership <- function(ntd_yearly, agency_list, Year1, Year2, title_on = TRUE) {
   x <- ntd_yearly %>%
     group_by(`Agency Name`, `Year`) %>% 
     summarise(upt = sum(upt)) %>% 
     filter(`Agency Name` %in% agency_list) %>% # only map to agency list
     filter(Year >= Year1 & Year <= Year2) #select rows between years
 
-  p <- ggplot(x, aes(x = Year, y = upt, colour =  `Agency Name`, group = `Agency Name`)) + geom_line() + 
-    scale_y_continuous("Annual Ridership", labels = scales::comma) + 
+  p <- ggplot(x, aes(x = Year, y = upt, colour =  `Agency Name`, group = `Agency Name`, labels = `Agency Name`)) + geom_line() + 
+    scale_y_continuous("Annual Ridership (All Modes)", labels = scales::comma) + 
+    scale_x_discrete(expand = expand_scale(mult = c(0, 0.4))) +
     theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
-    geom_dl(aes(label = `Agency Name`), method = list(dl.combine("last.qp"), list(dl.trans(x=x-3.5)), list(dl.trans(y=y+0.4)), cex = 0.75)) + 
-    scale_color_discrete(guide = 'none') +
-    labs(title = paste("Yearly Ridership by Peer Providers"))
+    geom_dl(aes(label = `Agency Name`), method = list(dl.trans(x = x + 0.2), "last.points", cex = 0.8)) + 
+    scale_color_discrete(guide = 'none') + 
+    theme_phl()
+    
   
-  return(p)
+  if(title_on == TRUE) {
+    return( p + labs(title = paste("Yearly Ridership by Similar Agencies")))
+  }
+  else { return(p)}
 }
-plot_agencies_yearly_ridership(ntd_yearly, top_15_bus_agencies_2017[2:15], 2010, 2017) # Drop NYC - too much ridership!
+yearly_ridership_similar_agencies <- plot_agencies_yearly_ridership(ntd_yearly, top_15_bus_agencies_2017[2:7], 2010, 2017) # Drop NYC - too much ridership!
 
 
-plot_uza_yearly_ridership <- function(ntd_yearly, uza_list, year1, year2) {
+plot_uza_yearly_ridership <- function(ntd_yearly, uza_list, Year1, Year2, title_on = TRUE) {
   x <- ntd_yearly %>%
     group_by(`UZA Name`, `Year`) %>% 
     summarise(upt = sum(upt)) %>% 
@@ -416,18 +371,25 @@ plot_uza_yearly_ridership <- function(ntd_yearly, uza_list, year1, year2) {
     filter(Year >= Year1 & Year <= Year2) #select rows between years
   
   p <- ggplot(x, aes(x = Year, y = upt, colour =  `UZA Name`, group = `UZA Name`)) + geom_line() + 
-    scale_y_continuous("Annual Ridership", labels = scales::comma) + 
+    scale_y_continuous("Annual Ridership (All Modes)", labels = scales::comma) + 
+    scale_x_discrete(expand = expand_scale(mult = c(0, 0.4))) +
     theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
     #theme(plot.margin = margin(20, 50, 0, 0, 'pt')) +
-    geom_dl(aes(label = `UZA Name`), method = list(dl.combine("last.qp"), list(dl.trans(x=x-3.5)), list(dl.trans(y=y+0.4)), cex = 0.75)) + 
+    geom_dl(aes(label = `UZA Name`), method = list(dl.trans(x = x + 0.2), "last.points", cex = 0.8)) + 
     scale_color_discrete(guide = 'none') +
-    labs(title = paste("Yearly Ridership by Metro Area (all regional transit providers)")) +
-    theme(plot.margin = unit(c(1,3,1,1), "lines")) 
-  return(p)
+    geom_hline(aes(yintercept = 1)) + 
+    theme(plot.margin = unit(c(1,3,1,1), "lines")) +
+    theme_phl()
+  
+  if(title_on == TRUE) { 
+    return( p + labs(title = paste("Yearly Ridership by Metro Area (all regional transit providers)")))
+    }
+  else { return(p) }
 }
-plot_uza_yearly_ridership(ntd_yearly, top_15_transit_cities_2017[2:15], 2004, 2018)
+top_7_transit_uzas_2018 <- find_top_x_cities(ntd_yearly, 7, 2018)
+yearly_ridership_similar_UZAS <- plot_uza_yearly_ridership(ntd_yearly, top_7_transit_uzas_2018[2:7], 2008, 2018, title_on == TRUE)
 
-plot_uza_yearly_ridership_indexed <- function(ntd_yearly, uza_list, Year1, Year2) {
+plot_uza_yearly_ridership_indexed <- function(ntd_yearly, uza_list, Year1, Year2, title_on = TRUE) {
   x <- ntd_yearly %>%
     group_by(`UZA Name`, `Year`) %>% 
     summarise(upt = sum(upt)) %>% 
@@ -438,75 +400,30 @@ plot_uza_yearly_ridership_indexed <- function(ntd_yearly, uza_list, Year1, Year2
     mutate(delta = upt / first(upt))
   
   p <- ggplot(x, aes(x = Year, y = delta, colour =  `UZA Name`, group = `UZA Name`)) + geom_line() + 
-    scale_y_continuous("Annual Ridership Change, Indexed") + 
+    scale_y_continuous("Annual Ridership (All Modes), Indexed", 
+                       labels = scales::percent_format(),
+                       limits = c(min(x$delta) - 0.05, max(x$delta + 0.05))) + 
     scale_x_discrete(expand = expand_scale(mult = c(0, 0.4))) +
     theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
     geom_dl(aes(label = `UZA Name`), method = list(dl.trans(x = x + 0.2), "last.points", cex = 0.8)) + 
     scale_color_discrete(guide = 'none') +
-    labs(title = paste("Yearly Ridership by Metro Area (all regional transit providers)")) + 
     geom_hline(aes(yintercept = 1)) + 
-    theme(plot.margin = unit(c(1,3,1,1), "lines")) 
+    theme(plot.margin = unit(c(1,3,1,1), "lines"))  +
+    theme_phl()
   
   p$layout$clip[p$layout$name == "panel"] <- "off"
   
+  if(title_on == TRUE) { 
+    return( p + labs(title = paste("Yearly Ridership by Metro Area (All Providers)")))
+  }
+  else { return(p) }
+  
   return(p)
 }
-plot_uza_yearly_ridership_indexed(ntd_yearly, top_15_transit_cities_2017, 2008, 2018)
+similar_uza_indexed_ridership <- plot_uza_yearly_ridership_indexed(ntd_yearly, top_15_transit_cities_2017, 2008, 2018)
 
 
 #### SPEED ANALYSIS ####
-
-# DEPRECATED - DON'T USE METRIC DATA FOR SPEED (ONLY GOES BACK 4 YEARS... USE THE MONTHLY DATASET)
-# add paramater for list of cities to highlight
-
-find_top_x_cities <- function(data, number_cities, data_year) {
-  dat <- data %>% 
-    group_by(`UZA Name`, Year) %>% 
-    summarise(upt = sum(`upt`)) %>% 
-    filter(`Year` == data_year) %>% 
-    arrange(-`upt`) %>% 
-    head(number_cities) %>% 
-    ungroup() %>% 
-    select(`UZA Name`) %>% 
-    as.list()
-  
-  list <- dat$`UZA Name`
-  
-  return(list)
-}
-find_top_x_cities_bymode <- function(data, number_cities, mode, data_year) {
-  dat <- data %>% 
-    group_by(`UZA Name`, Mode, Year) %>% 
-    summarise(upt = sum(`upt`)) %>% 
-    filter(Mode == mode & `Year` == data_year) %>% 
-    arrange(-`upt`) %>% 
-    head(number_cities) %>% 
-    ungroup() %>% 
-    select(`UZA Name`) %>% 
-    as.list()
-  
-  list <- dat$`UZA Name`
-  
-  return(list)
-}
-find_top_x_agencies_bymode <- function(data, number_agencies, mode, data_year) {
-  dat <- data %>% 
-    group_by(`NTD ID`, `Agency Name`, Mode, Year) %>% 
-    summarise(upt = sum(`upt`)) %>% 
-    filter(Mode == mode & `Year` == data_year) %>% 
-    arrange(-`upt`) %>% 
-    head(number_agencies) %>% 
-    ungroup() %>% 
-    select(`Agency Name`) %>% 
-    as.list()
-  
-  list <- dat$`Agency Name`
-  
-  return(list)
-}
-top_15_transit_cities_2017 <- find_top_x_cities(ntd_yearly, 15, 2017)
-top_15_bus_cities_2017 <- find_top_x_cities_bymode(ntd_yearly, 15, "Bus", 2017)
-top_15_bus_agencies_2017 <- find_top_x_agencies_bymode(ntd_yearly, 15, "Bus", 2017)
 
 # need to fix to use years correctly
 plot_uza_speeds <- function(ntd_yearly, uza_list = find_top_x_cities_bymode(ntd_yearly, 15, "Bus", 2018), 
@@ -526,7 +443,7 @@ plot_uza_speeds <- function(ntd_yearly, uza_list = find_top_x_cities_bymode(ntd_
     xlab("Uranized Area") + 
     ylab(paste0("Vehicle Miles per Revenue Hour ", data_year)) + 
     theme_linedraw() + scale_fill_brewer(palette = "Paired") + 
-    theme(axis.text.x = element_text(angle = 90)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     theme(legend.position = "none")
   
   if(title_on == TRUE) { 

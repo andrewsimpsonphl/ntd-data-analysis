@@ -1,69 +1,86 @@
-Agency,UZA Name,Modes,Year,ridership,.group
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2002,164620957,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2003,165764344,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2004,187664870,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2005,182087598,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2006,176058995,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2007,165709554,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2008,168351180,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2009,162265498,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2010,167658773,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2011,168196829,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2012,182072664,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2013,189674403,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2014,180473743,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2015,184085363,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2016,177527188,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2017,169091504,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Bus,2018,163223926,1
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2002,28426507,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2003,27952717,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2004,30733520,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2005,33265441,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2006,34070073,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2007,33874811,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2008,36167848,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2009,34618900,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2010,35529079,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2011,35092879,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2012,36114950,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2013,37728836,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2014,37875864,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2015,37047837,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2016,33999192,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2017,32893584,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Commuter Rail,2018,33588140,2
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2002,85787915,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2003,86953887,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2004,87180859,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2005,86544524,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2006,87437845,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2007,88939526,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2008,90999511,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2009,92360371,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2010,96566787,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2011,98390526,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2012,99688482,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2013,101236722,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2014,99762965,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2015,102121021,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2016,97314969,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2017,93090327,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Heavy Rail,2018,93897356,3
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2002,17561198,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2003,17896083,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2004,24916708,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2005,25014005,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2006,27525610,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2007,30608685,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2008,32453624,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2009,28766305,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2010,30596321,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2011,32576518,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2012,29146013,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2013,26502625,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2014,25404943,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2015,26069717,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2016,25697732,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2017,25814790,4
-Southeastern Pennsylvania Transportation Authority,"Philadelphia, PA-NJ-DE-MD",Trolley,2018,24025305,4
+Agency Name,Mode,Year,upt,.group
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2002,173930943,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2003,178628467,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2004,187529994,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2005,187960265,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2006,177105684,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2007,170491709,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2008,183574756,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2009,186165268,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2010,183625270,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2011,189748689,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2012,195991796,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2013,191091634,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2014,183962132,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2015,177983650,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2016,188984891,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2017,169407096,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Bus,2018,166620201,1
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2002,30823507,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2003,30023056,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2004,30284624,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2005,31680006,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2006,34150997,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2007,33496406,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2008,34031264,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2009,35653018,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2010,36805684,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2011,37820990,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2012,36899167,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2013,37167694,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2014,37690388,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2015,37650714,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2016,36187570,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2017,33209489,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Commuter Rail,2018,32245981,2
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2002,1474948,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2003,1558715,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2004,1634494,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2005,1653749,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2006,1732053,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2007,1754607,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2008,1773845,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2009,1798211,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2010,1778334,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2011,1794068,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2012,1755592,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2013,1713724,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2014,1777751,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2015,1842752,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2016,1792284,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2017,1704463,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Demand Response,2018,1554597,3
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2002,84707764,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2003,85523785,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2004,88083120,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2005,88045676,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2006,84616355,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2007,88461397,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2008,92065208,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2009,95110125,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2010,95229240,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2011,101032347,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2012,102796169,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2013,101035800,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2014,99288812,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2015,100747758,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2016,101883835,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2017,93879889,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Heavy Rail,2018,94005114,4
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2002,22749889,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2003,24850177,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2004,25158140,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2005,25206424,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2006,25445460,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2007,27635664,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2008,29497103,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2009,29588034,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2010,29445764,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2011,28447095,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2012,26054870,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2013,27430501,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2014,24458420,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2015,26072385,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2016,25766746,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2017,26549260,5
+Southeastern Pennsylvania Transportation Authority(SEPTA),Trolley,2018,24999649,5
