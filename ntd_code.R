@@ -49,7 +49,6 @@ update_all_data <- function() {
   dowload_metric_data() # not being use for any actual analysis now
 }
 
-
 load_metric_data <- function(path = "./inputs/ntd_metric_data", agency_info_data) {
   file_list <- list.files(path,
                           pattern = "*.xlsx", full.names = T)
@@ -281,6 +280,9 @@ load_monthly_upt <- function(path= "./inputs/ntd_monthly_upt_file.xlsx") {
 }
 
 #### READ DATA INTO ENVIRONMENT-----------------------------------------------------------------------####
+
+# Call when you want to redownload all the NTD data into the file path:
+# update_all_data()
 
 # Key assumptions: 
 # Bus = Motorbus and Trolley Bus operations
