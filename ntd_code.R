@@ -10,11 +10,6 @@ library(rphl)
 library(scales)
 library(grid)
 
-peer_codes <- c(90154, 50066, 30030, 30019, 10003, 30034, 1) #WMATA, MBTA, SEPTA, Batltimore, Seattle, CTA
-peer_uzas <- c(1:10) #10 largest UZAs excluding NYC
-septa_name <- "Southeastern Pennsylvania Transportation Authority(SEPTA)"
-nyc_name <- "MTA New York City Transit"
-
 
 #### DOWNLOAD NTD MOST RECENT FILES -------------------------------------------------------------------####
 
@@ -295,7 +290,8 @@ upt_monthly <- load_monthly_upt()
 #### YEARLY UPT ANALYSIS ########
 
 #agency bus ridership
-plot_agency_mode_yearly <- function(ntd_yearly, agency_name = septa_name, mode, Year1 = 2002, Year2 = 2018) {
+plot_agency_mode_yearly <- function(ntd_yearly, agency_name = "Southeastern Pennsylvania Transportation Authority(SEPTA)", 
+                                    mode = "Bus", Year1 = 2002, Year2 = 2018) {
   d <- ntd_yearly %>%
     group_by(`Agency Name`, `Mode`, `Year`) %>% 
     summarise(upt = sum(upt)) %>% 
@@ -310,12 +306,13 @@ plot_agency_mode_yearly <- function(ntd_yearly, agency_name = septa_name, mode, 
   return (p)
 }
 
+septa_name <- "Southeastern Pennsylvania Transportation Authority(SEPTA)"
 septa_bus_yearly <- plot_agency_mode_yearly(ntd_yearly, septa_name, "Bus", 2002, 2018)
 septa_subel_yearly <- plot_agency_mode_yearly(ntd_yearly, septa_name, "Heavy Rail", 2002, 2018)
 septa_regional_yearly <- plot_agency_mode_yearly(ntd_yearly, septa_name, "Commuter Rail", 2002, 2019)
 septa_trolley_yearly <- plot_agency_mode_yearly(ntd_yearly, septa_name, "Trolley", 2002, 2018)
 
-plot_agency_stackedmodes_yearly <- function(ntd_yearly, agency_name, year1, year2) {
+plot_agency_stackedmodes_yearly <- function(ntd_yearly, agency_name, Year1, Year2) {
   d <- ntd_yearly %>%
     group_by(`Agency Name`, `Mode`, `Year`) %>% 
     summarise(upt = sum(upt)) %>% 
@@ -329,9 +326,9 @@ plot_agency_stackedmodes_yearly <- function(ntd_yearly, agency_name, year1, year
   return (p)
 }
 
-septa_modal_yearly_ridership <- plot_agency_stackedmodes_yearly(ntd_yearly, septa_name, 2002, 2018)
+septa_modal_yearly_ridership <- plot_agency_stackedmodes_yearly(ntd_yearly, septa_name, Year1 = 2002, Year2 = 2018)
 
-plot_agency_stackedmodes_yearly_pct <- function(ntd_yearly, agency_name, year1, year2) {
+plot_agency_stackedmodes_yearly_pct <- function(ntd_yearly, agency_name, Year1, Year2) {
   d <- ntd_yearly %>%
     group_by(`Agency Name`, `Mode`, `Year`) %>% 
     summarise(upt = sum(upt)) %>% 
@@ -343,6 +340,56 @@ plot_agency_stackedmodes_yearly_pct <- function(ntd_yearly, agency_name, year1, 
   return (p)
 }
 septa_yearly_stacked <- plot_agency_stackedmodes_yearly_pct(ntd_yearly, septa_name, 2002, 2018)
+
+#### FIND TOP X CITIES/AGENCIES HELPER FUNCTIONS 
+find_top_x_cities <- function(data, number_cities, data_year) {
+  dat <- data %>% 
+    group_by(`UZA Name`, Year) %>% 
+    summarise(upt = sum(`upt`)) %>% 
+    filter(`Year` == data_year) %>% 
+    arrange(-`upt`) %>% 
+    head(number_cities) %>% 
+    ungroup() %>% 
+    select(`UZA Name`) %>% 
+    as.list()
+  
+  list <- dat$`UZA Name`
+  
+  return(list)
+}
+find_top_x_cities_bymode <- function(data, number_cities, mode, data_year) {
+  dat <- data %>% 
+    group_by(`UZA Name`, Mode, Year) %>% 
+    summarise(upt = sum(`upt`)) %>% 
+    filter(Mode == mode & `Year` == data_year) %>% 
+    arrange(-`upt`) %>% 
+    head(number_cities) %>% 
+    ungroup() %>% 
+    select(`UZA Name`) %>% 
+    as.list()
+  
+  list <- dat$`UZA Name`
+  
+  return(list)
+}
+find_top_x_agencies_bymode <- function(data, number_agencies, mode, data_year) {
+  dat <- data %>% 
+    group_by(`NTD ID`, `Agency Name`, Mode, Year) %>% 
+    summarise(upt = sum(`upt`)) %>% 
+    filter(Mode == mode & `Year` == data_year) %>% 
+    arrange(-`upt`) %>% 
+    head(number_agencies) %>% 
+    ungroup() %>% 
+    select(`Agency Name`) %>% 
+    as.list()
+  
+  list <- dat$`Agency Name`
+  
+  return(list)
+}
+top_15_transit_cities_2017 <- find_top_x_cities(ntd_yearly, 15, 2017)
+top_15_bus_cities_2017 <- find_top_x_cities_bymode(ntd_yearly, 15, "Bus", 2017)
+top_15_bus_agencies_2017 <- find_top_x_agencies_bymode(ntd_yearly, 15, "Bus", 2017)
 
 
 # plot line graph of yearly average, taking in a list of agencies (peer uzas), begging year, end year
@@ -394,7 +441,7 @@ plot_uza_yearly_ridership <- function(ntd_yearly, uza_list, Year1, Year2, title_
   else { return(p) }
 }
 top_7_transit_uzas_2018 <- find_top_x_cities(ntd_yearly, 7, 2018)
-yearly_ridership_similar_UZAS <- plot_uza_yearly_ridership(ntd_yearly, top_7_transit_uzas_2018[2:7], 2008, 2018, title_on == TRUE)
+yearly_ridership_similar_UZAS <- plot_uza_yearly_ridership(ntd_yearly, top_7_transit_uzas_2018[2:7], 2008, 2018, title_on = TRUE)
 
 plot_uza_yearly_ridership_indexed <- function(ntd_yearly, uza_list, Year1, Year2, title_on = TRUE) {
   x <- ntd_yearly %>%
