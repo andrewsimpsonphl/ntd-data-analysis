@@ -17,33 +17,38 @@ nyc_name <- "MTA New York City Transit"
 
 
 #### DOWNLOAD NTD MOST RECENT FILES -------------------------------------------------------------------####
-#TO DO: MAKE THIS A SINGLE FUNCTION
 
-# pull lookup table of NTD ID to Agency Name
-agency_info_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/2018%20Agency%20Info_1.xlsx"
-agency_info_file <- download.file(agency_info_url, "./inputs/agency_info_file")
-
-# Download Monthly Unlinked Passenger Trips 
-url_monthly_data <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/September%202019%20Adjusted%20Database.xlsx"
-#ntd_monthly <- download.file(url_monthly_data, "./inputs/ntd_monthly")
-
-##Download "TS2.1 - Service Data and Operating Expenses Time-Series by Mode" from FTA website
-url_TS2_1 <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/TS2.1TimeSeriesOpExpSvcModeTOS_2.xlsx"
-yearly_TS2_1_file <- download.file(url_TS2_1, "./inputs/ntd_yearly_file.xlsx")
-
-#Download NTD Metrics data - NEED TO FIX - NOT USEFUL FOR SPEED...
-dowload_metric_data <- function(path = "./inputs/ntd_metric_data") {
-  metrics_2018_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_2.xlsm"
-  metrics_2017_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
-  metrics_2016_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_0.xlsm"
-  metrics_2015_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
+# Use to update all NTD data (no need to do daily but good to check for updates)
+update_all_data <- function() {
   
-  ntd_metric_2018_file <- download.file(metrics_2018_url, paste0(path, "/", 2018, ".xlsx"))
-  ntd_metric_2017_file <- download.file(metrics_2017_url, paste0(path, "/", 2017, ".xlsx"))
-  ntd_metric_2016_file <- download.file(metrics_2016_url, paste0(path, "/", 2016, ".xlsx"))
-  ntd_metric_2015_file <- download.file(metrics_2015_url, paste0(path, "/", 2015, ".xlsx"))
+  # pull lookup table of NTD ID to Agency Name
+  agency_info_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/2018%20Agency%20Info_1.xlsx"
+  agency_info_file <- download.file(agency_info_url, "./inputs/agency_info_file")
+  
+  # Download Monthly Unlinked Passenger Trips 
+  url_monthly_data <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/September%202019%20Adjusted%20Database.xlsx"
+  ntd_monthly <- download.file(url_monthly_data, "./inputs/ntd_monthly")
+  
+  ##Download "TS2.1 - Service Data and Operating Expenses Time-Series by Mode" from FTA website
+  url_TS2_1 <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/TS2.1TimeSeriesOpExpSvcModeTOS_2.xlsx"
+  yearly_TS2_1_file <- download.file(url_TS2_1, "./inputs/ntd_yearly_file.xlsx")
+  
+  #Download NTD Metrics data - NEED TO FIX - NOT USEFUL FOR SPEED...
+  dowload_metric_data <- function(path = "./inputs/ntd_metric_data") {
+    metrics_2018_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_2.xlsm"
+    metrics_2017_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
+    metrics_2016_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_0.xlsm"
+    metrics_2015_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
+    
+    ntd_metric_2018_file <- download.file(metrics_2018_url, paste0(path, "/", 2018, ".xlsx"))
+    ntd_metric_2017_file <- download.file(metrics_2017_url, paste0(path, "/", 2017, ".xlsx"))
+    ntd_metric_2016_file <- download.file(metrics_2016_url, paste0(path, "/", 2016, ".xlsx"))
+    ntd_metric_2015_file <- download.file(metrics_2015_url, paste0(path, "/", 2015, ".xlsx"))
+  }
+  
+  dowload_metric_data() # not being use for any actual analysis now
 }
-#dowload_metric_data()
+
 
 load_metric_data <- function(path = "./inputs/ntd_metric_data", agency_info_data) {
   file_list <- list.files(path,
