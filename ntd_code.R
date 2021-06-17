@@ -35,6 +35,8 @@ update_all_data <- function() {
     metrics_2016_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_0.xlsm"
     metrics_2015_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
     
+    ntd_metric_2018_file <- download.file(metrics_2018_url, paste0(path, "/", 2020, ".xlsx"))
+    ntd_metric_2018_file <- download.file(metrics_2018_url, paste0(path, "/", 2019, ".xlsx"))
     ntd_metric_2018_file <- download.file(metrics_2018_url, paste0(path, "/", 2018, ".xlsx"))
     ntd_metric_2017_file <- download.file(metrics_2017_url, paste0(path, "/", 2017, ".xlsx"))
     ntd_metric_2016_file <- download.file(metrics_2016_url, paste0(path, "/", 2016, ".xlsx"))
@@ -282,7 +284,7 @@ load_monthly_upt <- function(path= "./inputs/ntd_monthly_upt_file.xlsx") {
 # Key assumptions: 
 # Bus = Motorbus and Trolley Bus operations
 # Trolley = Streetcar Rail and Light rail operations (becasue SEPTA switched their class from Light Rail to Streetcar in mid 00's)
-ntd_yearly <- load_yearly_data(Year1 = 2002, Year2 = 2018)
+ntd_yearly <- load_yearly_data(Year1 = 2002, Year2 = 2019)
 agency_info_data <- read_excel("./inputs/agency_info_file", sheet = 1)
 metric_data <- load_metric_data(agency_info_data = agency_info_data)
 upt_monthly <- load_monthly_upt()
