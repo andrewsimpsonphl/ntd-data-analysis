@@ -21,7 +21,7 @@ update_all_data <- function() {
   agency_info_file <- download.file(agency_info_url, "./inputs/agency_info_file")
   
   # Download Monthly Unlinked Passenger Trips 
-  url_monthly_data <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/2021-06/April%202021%20Adjusted%20Database.xlsx"
+  url_monthly_data <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/2023-09/July%202023%20Raw%20Monthly%20Ridership%20%28no%20adjustments%20or%20estimates%29.xlsx"
   ntd_monthly <- download.file(url_monthly_data, "./inputs/ntd_monthly")
   
   ##Download "TS2.1 - Service Data and Operating Expenses Time-Series by Mode" from FTA website
@@ -30,13 +30,14 @@ update_all_data <- function() {
   
   #Download NTD Metrics data - NEED TO FIX - NOT USEFUL FOR SPEED...
   dowload_metric_data <- function(path = "./inputs/ntd_metric_data") {
+    #metrics_2020_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/2020-Metrics.zip"
     metrics_2019_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
     metrics_2018_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_2.xlsm"
     metrics_2017_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
     metrics_2016_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_0.xlsm"
     metrics_2015_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
     
-    #ntd_metric_2018_file <- download.file(metrics_2018_url, paste0(path, "/", 2020, ".xlsx"))
+    #ntd_metric_2020_file <- download.file(metrics_2020_url, paste0(path, "/", 2020, ".xlsx"))
     ntd_metric_2019_file <- download.file(metrics_2019_url, paste0(path, "/", 2019, ".xlsx"))
     ntd_metric_2018_file <- download.file(metrics_2018_url, paste0(path, "/", 2018, ".xlsx"))
     ntd_metric_2017_file <- download.file(metrics_2017_url, paste0(path, "/", 2017, ".xlsx"))
@@ -91,7 +92,7 @@ load_metric_data <- function(path = "./inputs/ntd_metric_data", agency_info_data
 }
 
 # Function to bring in VRM, VRH, UPT, Opex, and Fare data for every agency
-load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx", Year1 = 2002, Year2 = 2019) {
+load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx", Year1 = 2002, Year2 = 2021) {
   ntd_yearly_vrm_data <- read_excel(file_path, sheet = "VRM")
   ntd_yearly_vrh_data <- read_excel(file_path, sheet = "VRH")
   ntd_yearly_upt_data <- read_excel(file_path, sheet = "UPT")
@@ -285,7 +286,7 @@ load_monthly_upt <- function(path= "./inputs/ntd_monthly_upt_file.xlsx") {
 # Key assumptions: 
 # Bus = Motorbus and Trolley Bus operations
 # Trolley = Streetcar Rail and Light rail operations (becasue SEPTA switched their class from Light Rail to Streetcar in mid 00's)
-ntd_yearly <- load_yearly_data(Year1 = 2002, Year2 = 2019)
+ntd_yearly <- load_yearly_data(Year1 = 2002, Year2 = 2021)
 agency_info_data <- read_excel("./inputs/agency_info_file", sheet = 1)
 metric_data <- load_metric_data(agency_info_data = agency_info_data)
 upt_monthly <- load_monthly_upt()
