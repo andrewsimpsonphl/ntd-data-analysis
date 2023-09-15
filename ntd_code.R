@@ -18,31 +18,35 @@ update_all_data <- function() {
   
   # pull lookup table of NTD ID to Agency Name
   agency_info_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/2021-05/2019%20Agency%20Info.xlsx"
-  agency_info_file <- download.file(agency_info_url, "./inputs/agency_info_file")
+  agency_info_file <- download.file(agency_info_url, "./inputs/agency_info_file", mode="wb")
   
   # Download Monthly Unlinked Passenger Trips 
   url_monthly_data <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/2023-09/July%202023%20Raw%20Monthly%20Ridership%20%28no%20adjustments%20or%20estimates%29.xlsx"
-  ntd_monthly <- download.file(url_monthly_data, "./inputs/ntd_monthly")
+  ntd_monthly <- download.file(url_monthly_data, "./inputs/ntd_monthly", mode="wb")
   
   ##Download "TS2.1 - Service Data and Operating Expenses Time-Series by Mode" from FTA website
-  url_TS2_1 <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/2020-11/TS2.1%20Service%20Data%20and%20Operating%20Expenses%20Time-Series%20by%20Mode.xlsx"
-  yearly_TS2_1_file <- download.file(url_TS2_1, "./inputs/ntd_yearly_file.xlsx")
+  url_TS2_1 <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/2023-06/TS2.1%20Service%20Data%20and%20Operating%20Expenses%20Time%20Series%20by%20Mode.xlsx"
+  yearly_TS2_1_file <- download.file(url_TS2_1, "./inputs/ntd_yearly_file.xlsx", mode="wb") 
+  
+  # Note - 9/15/202 - needed to add mode="wb" to prevent downloaded excel file being corrupted
   
   #Download NTD Metrics data - NEED TO FIX - NOT USEFUL FOR SPEED...
   dowload_metric_data <- function(path = "./inputs/ntd_metric_data") {
+    metrics_2021_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/2022-10/2021%20Metrics_static.xlsx"
     #metrics_2020_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/2020-Metrics.zip"
     metrics_2019_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
-    metrics_2018_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_2.xlsm"
+    metrics_2018_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_2.xlsm"
     metrics_2017_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_1.xlsm"
-    metrics_2016_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics_0.xlsm"
-    metrics_2015_url <- "https://cms7.fta.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
+    metrics_2016_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_0.xlsm"
+    metrics_2015_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
     
+    ntd_metric_2021_file <- download.file(metrics_2021_url, paste0(path, "/", 2021, ".xlsx"), mode="wb")
     #ntd_metric_2020_file <- download.file(metrics_2020_url, paste0(path, "/", 2020, ".xlsx"))
-    ntd_metric_2019_file <- download.file(metrics_2019_url, paste0(path, "/", 2019, ".xlsx"))
-    ntd_metric_2018_file <- download.file(metrics_2018_url, paste0(path, "/", 2018, ".xlsx"))
-    ntd_metric_2017_file <- download.file(metrics_2017_url, paste0(path, "/", 2017, ".xlsx"))
-    ntd_metric_2016_file <- download.file(metrics_2016_url, paste0(path, "/", 2016, ".xlsx"))
-    ntd_metric_2015_file <- download.file(metrics_2015_url, paste0(path, "/", 2015, ".xlsx"))
+    ntd_metric_2019_file <- download.file(metrics_2019_url, paste0(path, "/", 2019, ".xlsx"), mode="wb")
+    ntd_metric_2018_file <- download.file(metrics_2018_url, paste0(path, "/", 2018, ".xlsx"), mode="wb")
+    ntd_metric_2017_file <- download.file(metrics_2017_url, paste0(path, "/", 2017, ".xlsx"), mode="wb")
+    ntd_metric_2016_file <- download.file(metrics_2016_url, paste0(path, "/", 2016, ".xlsx"), mode="wb")
+    ntd_metric_2015_file <- download.file(metrics_2015_url, paste0(path, "/", 2015, ".xlsx"), mode="wb")
   }
   
   dowload_metric_data() # not being use for any actual analysis now
@@ -115,9 +119,9 @@ load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx", Year1 
                        "DT" = "Demand Response Taxi", 
                        "VP" = "Vanpool", 
                        "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `Mode Status`, `UZA Name`, Service, `1991`:`2019`)) %>%
+    select(c(`NTD ID`,`Agency Name`, Mode, `Mode Status`, `UZA Name`, Service, `1991`:`2021`)) %>% # need to fix hard coded year
     group_by(Mode) %>%
-    gather(key = "Year", value = "vrm", c(`1991`:`2019`), convert = TRUE) %>% 
+    gather(key = "Year", value = "vrm", c(`1991`:`2021`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
     separate("Year", c("Year")) %>% 
     group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
@@ -139,9 +143,9 @@ load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx", Year1 
                        "DT" = "Demand Response Taxi", 
                        "VP" = "Vanpool", 
                        "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2019`)) %>%
+    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2021`)) %>%
     group_by(Mode) %>%
-    gather(key = "Year", value = "vrh", c(`1991`:`2019`), convert = TRUE) %>% 
+    gather(key = "Year", value = "vrh", c(`1991`:`2021`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
     separate("Year", c("Year")) %>% 
     group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
@@ -163,9 +167,9 @@ load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx", Year1 
                        "DT" = "Demand Response Taxi", 
                        "VP" = "Vanpool", 
                        "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2019`)) %>%
+    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2021`)) %>%
     group_by(Mode) %>%
-    gather(key = "Year", value = "upt", c(`1991`:`2019`), convert = TRUE) %>% 
+    gather(key = "Year", value = "upt", c(`1991`:`2021`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
     separate("Year", c("Year")) %>% 
     group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
@@ -186,9 +190,9 @@ load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx", Year1 
                        "DT" = "Demand Response Taxi", 
                        "VP" = "Vanpool", 
                        "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2019`)) %>%
+    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2021`)) %>%
     group_by(Mode) %>%
-    gather(key = "Year", value = "pmt", c(`1991`:`2019`), convert = TRUE) %>% 
+    gather(key = "Year", value = "pmt", c(`1991`:`2021`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
     separate("Year", c("Year")) %>% 
     group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
@@ -209,9 +213,9 @@ load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx", Year1 
                        "DT" = "Demand Response Taxi", 
                        "VP" = "Vanpool", 
                        "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `Mode Status`, `UZA Name`, Service, `1991`:`2019`)) %>%
+    select(c(`NTD ID`,`Agency Name`, Mode, `Mode Status`, `UZA Name`, Service, `1991`:`2021`)) %>%
     group_by(Mode) %>%
-    gather(key = "Year", value = "operating_expense", c(`1991`:`2019`), convert = TRUE) %>% 
+    gather(key = "Year", value = "operating_expense", c(`1991`:`2021`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
     separate("Year", c("Year")) %>% 
     group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
@@ -233,9 +237,9 @@ load_yearly_data <- function(file_path = "./inputs/ntd_yearly_file.xlsx", Year1 
                        "DT" = "Demand Response Taxi", 
                        "VP" = "Vanpool", 
                        "FB" = "Ferry Bus")) %>%
-    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2019`)) %>%
+    select(c(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Service, `1991`:`2021`)) %>%
     group_by(Mode) %>%
-    gather(key = "Year", value = "fare_revenue", c(`1991`:`2019`), convert = TRUE) %>% 
+    gather(key = "Year", value = "fare_revenue", c(`1991`:`2021`), convert = TRUE) %>% 
     mutate(Year = parse_date_time(Year, orders = "y")) %>% 
     separate("Year", c("Year")) %>% 
     group_by(`NTD ID`,`Agency Name`, Mode, `UZA Name`, Year) %>% 
@@ -288,7 +292,7 @@ load_monthly_upt <- function(path= "./inputs/ntd_monthly_upt_file.xlsx") {
 # Trolley = Streetcar Rail and Light rail operations (becasue SEPTA switched their class from Light Rail to Streetcar in mid 00's)
 ntd_yearly <- load_yearly_data(Year1 = 2002, Year2 = 2021)
 agency_info_data <- read_excel("./inputs/agency_info_file", sheet = 1)
-metric_data <- load_metric_data(agency_info_data = agency_info_data)
+metric_data <- load_metric_data(agency_info_data = agency_info_data) #note 2020 data is not included
 upt_monthly <- load_monthly_upt()
 
 #### YEARLY UPT ANALYSIS ########
@@ -578,6 +582,8 @@ plot_speed_top_x_mode_agencies <- function(ntd_yearly, mode, number_agencies, mi
 }
 plot_speed_top_x_mode_agencies(ntd_yearly, "Commuter Rail", 6, data_year = 2017)
 plot_speed_top_x_mode_agencies(ntd_yearly, "Bus", 15, data_year = 2017)
+plot_speed_top_x_mode_agencies(ntd_yearly, "Bus", 15, data_year = 2021)
+
 largest_15agency_bus_speeds_2019 <- plot_speed_top_x_mode_agencies(ntd_yearly, "Bus", 15, data_year = 2019)
 largest_15agency_bus_speeds_2019
 
