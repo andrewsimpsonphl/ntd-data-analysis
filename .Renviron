@@ -1,0 +1,9 @@
+options(internet.info = 0)
+http_proxy = "http://andrew.simpson@proxy.phila.gov:8080"
+http_proxy_user = mIzcen-bapxer-6kurbi@
+
+
+https_proxy = "http://andrew.simpson@proxy.phila.gov:8080"
+https_proxy_user = mIzcen-bapxer-6kurbi@
+ftp_proxy = andrew.simpson:<password>@proxy.phila.gov:8080
+
