@@ -40,6 +40,7 @@ update_all_data <- function() {
     metrics_2016_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics_0.xlsm"
     metrics_2015_url <- "https://www.transit.dot.gov/sites/fta.dot.gov/files/Metrics.xlsm"
     
+    # this code downloads the ntd metric files by year
     ntd_metric_2021_file <- download.file(metrics_2021_url, paste0(path, "/", 2021, ".xlsx"), mode="wb")
     #ntd_metric_2020_file <- download.file(metrics_2020_url, paste0(path, "/", 2020, ".xlsx"))
     ntd_metric_2019_file <- download.file(metrics_2019_url, paste0(path, "/", 2019, ".xlsx"), mode="wb")
